@@ -47,6 +47,10 @@
     <ItemGroup>
       <OutputFiles Include="$(OutputPath)/**/*" />
     </ItemGroup>
+    
+    <!-- Replace $(AssemblyVersion) with the actual version -->
+    <Exec Command="powershell -Command &quot;(Get-Content '$(OutputPath)Definition.json') -replace '\$\(AssemblyVersion\)', '$(AssemblyVersion)-Debug' | Set-Content '$(OutputPath)Definition.json'&quot;" />
+
 
     <Copy SourceFiles="@(OutputFiles)" DestinationFolder="$(GameModDir)" />
 
