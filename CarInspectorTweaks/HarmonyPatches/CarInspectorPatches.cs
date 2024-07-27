@@ -1,6 +1,10 @@
 namespace CarInspectorTweaks.HarmonyPatches;
 
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using CarInspectorResizer;
+using CarInspectorResizer.Behaviors;
+using CarInspectorTweaks.Extensions;
 using Game.Messages;
 using HarmonyLib;
 using JetBrains.Annotations;
@@ -18,6 +22,14 @@ using Car = Model.Car;
 [HarmonyPatch]
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 public static class CarInspectorPatches {
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(CarInspector), "Awake")]
+    public static void Awake(ref Window ____window) {
+        var windowAutoHeight = ____window.gameObject!.GetComponent<CarInspectorAutoHeightBehavior>()!;
+        windowAutoHeight.ExpandOrders(AutoEngineerMode.Off, 40);
+        windowAutoHeight.UpdateWindowHeight();
+    }
 
     #region remember last selected tab when selecting new car
 
@@ -90,19 +102,28 @@ public static class CarInspectorPatches {
         builder.AddField("Reverser", reverser);
         builder.AddField("Independent", locomotiveBrake);
         builder.AddField("Train Brake", trainBrake);
-        builder.AddField("", builder.ButtonStrip(builder2 => AddCustomButtons(builder2, __instance, ____car))!);
+        builder.AddField("",
+            builder.ButtonStrip(strip => {
+                var cars = locomotive.EnumerateCoupled()!.ToList()!;
+
+                if (cars.Any(c => c.air!.handbrakeApplied)) {
+                    strip.AddButton($"Release {TextSprites.HandbrakeWheel}", () => Utility.ReleaseAllHandbrakes(cars))!
+                        .Tooltip("Release handbrakes", $"Iterates over cars in this consist and releases {TextSprites.HandbrakeWheel}.");
+                }
+
+                if (cars.Any(c => c.EndAirSystemIssue())) {
+                    strip.AddButton("Connect Air", () => Utility.ConnectAir(cars))!
+                        .Tooltip("Connect Consist Air", "Iterates over each car in this consist and connects gladhands and opens anglecocks.");
+                }
+            })!
+        );
     }
 
     [HarmonyReversePatch]
     [HarmonyPatch(typeof(CarInspector), "SelectConsist")]
     public static void SelectConsist(CarInspector __instance) {
     }
-
-    private static void AddCustomButtons(UIPanelBuilder strip, CarInspector __instance, Car ____car) {
-        strip.AddButton("Select", () => SelectConsist(__instance))!.Tooltip("Select Car", "Selected locomotives display HUD controls. Shortcuts allow jumping to the selected car.");
-        strip.AddButton("Follow", () => CameraSelector.shared!.FollowCar(____car))?.Tooltip("Follow Car", "Jump the overhead camera to this car and track it.");
-    }
-
+    
     #endregion
 
 }
