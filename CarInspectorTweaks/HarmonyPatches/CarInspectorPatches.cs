@@ -1,6 +1,5 @@
 namespace CarInspectorTweaks.HarmonyPatches;
 
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Game.Messages;
 using HarmonyLib;
@@ -22,16 +21,15 @@ public static class CarInspectorPatches {
 
     #region remember last selected tab when selecting new car
 
-    private static Dictionary<CarArchetype, string?> _TabStates = new();
-
     [HarmonyPrefix]
     [HarmonyPatch(typeof(CarInspector), "Populate")]
     public static void Populate(Car car, ref Car? ____car, ref UIState<string?> ____selectedTabState) {
         if (____car != null) {
-            _TabStates[____car.Archetype] = ____selectedTabState.Value;
+            CarInspectorTweaksPlugin.Settings.TabStates[____car.Archetype] = ____selectedTabState.Value;
+            CarInspectorTweaksPlugin.SaveSettings();
         }
 
-        _TabStates.TryGetValue(car.Archetype, out var state);
+        CarInspectorTweaksPlugin.Settings.TabStates.TryGetValue(car.Archetype, out var state);
         ____selectedTabState.Value = state;
         ____car = car;
     }
@@ -54,7 +52,7 @@ public static class CarInspectorPatches {
 
         builder.AddExpandingVerticalSpacer();
     }
-    
+
     private static void AddManualControls(UIPanelBuilder builder, BaseLocomotive locomotive, CarInspector __instance, Car ____car) {
         var locomotiveControl = locomotive.locomotiveControl!;
         var air = locomotiveControl.air!;
@@ -106,4 +104,5 @@ public static class CarInspectorPatches {
     }
 
     #endregion
+
 }
