@@ -24,8 +24,8 @@ using Car = Model.Car;
 public static class CarInspectorPatches {
 
     [HarmonyPostfix]
-    [HarmonyPatch(typeof(CarInspector), "Awake")]
-    public static void Awake(ref Window ____window) {
+    [HarmonyPatch(typeof(CarInspector), "Populate")]
+    public static void Populate(ref Window ____window) {
         var windowAutoHeight = ____window.gameObject!.GetComponent<CarInspectorAutoHeightBehavior>()!;
         windowAutoHeight.ExpandOrders(AutoEngineerMode.Off, 40);
         windowAutoHeight.UpdateWindowHeight();
