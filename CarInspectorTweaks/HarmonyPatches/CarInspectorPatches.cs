@@ -1,8 +1,6 @@
 namespace CarInspectorTweaks.HarmonyPatches;
 
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using CarInspectorResizer;
 using CarInspectorResizer.Behaviors;
 using CarInspectorTweaks.Extensions;
 using Game.Messages;
@@ -20,15 +18,13 @@ using Car = Model.Car;
 
 [PublicAPI]
 [HarmonyPatch]
-[SuppressMessage("ReSharper", "InconsistentNaming")]
 public static class CarInspectorPatches {
 
     [HarmonyPostfix]
     [HarmonyPatch(typeof(CarInspector), "Populate")]
     public static void Populate(ref Window ____window) {
         var windowAutoHeight = ____window.gameObject!.GetComponent<CarInspectorAutoHeightBehavior>()!;
-        windowAutoHeight.ExpandOrders(AutoEngineerMode.Off, 45);
-        windowAutoHeight.UpdateWindowHeight();
+        windowAutoHeight.ExpandOrders(AutoEngineerMode.Off, 30);
     }
 
     #region remember last selected tab when selecting new car
@@ -123,7 +119,7 @@ public static class CarInspectorPatches {
     [HarmonyPatch(typeof(CarInspector), "SelectConsist")]
     public static void SelectConsist(CarInspector __instance) {
     }
-    
+
     #endregion
 
 }
