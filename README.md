@@ -6,6 +6,9 @@ Simple mod, that modifies Car inspector dialog:
 2. Orders tab shows buttons [Select] and [Follow]
 3. Manual mode on orders tab shows sliders for Throttle, Reverser, Independent and Train Brake
 
+## Requirements
+* CarInspectorResizer mod: https://github.com/CzBuCHi/Railroader-CarInspectorResizer
+
 ## Installation
 
 * Download `CarInspectorResizer-VERSION.zip` from the releases page
