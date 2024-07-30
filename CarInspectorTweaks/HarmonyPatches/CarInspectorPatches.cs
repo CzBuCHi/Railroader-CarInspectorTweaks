@@ -1,5 +1,3 @@
-namespace CarInspectorTweaks.HarmonyPatches;
-
 using System.Linq;
 using CarInspectorResizer.Behaviors;
 using CarInspectorTweaks.Extensions;
@@ -9,22 +7,27 @@ using JetBrains.Annotations;
 using Model;
 using Model.AI;
 using Model.Definition;
+using Model.OpsNew;
 using UI.Builder;
 using UI.CarInspector;
 using UI.Common;
 using UI.EngineControls;
 using UnityEngine;
-using Car = Model.Car;
+
+namespace CarInspectorTweaks.HarmonyPatches;
+
+using Car = Car;
 
 [PublicAPI]
 [HarmonyPatch]
-public static class CarInspectorPatches {
-
+public static class CarInspectorPatches
+{
     [HarmonyPostfix]
     [HarmonyPatch(typeof(CarInspector), "Populate")]
     public static void Populate(ref Window ____window) {
         var windowAutoHeight = ____window.gameObject!.GetComponent<CarInspectorAutoHeightBehavior>()!;
         windowAutoHeight.ExpandOrders(AutoEngineerMode.Off, 50);
+        windowAutoHeight.ExpandTab("equipment", 30);
     }
 
     #region remember last selected tab when selecting new car
@@ -104,12 +107,12 @@ public static class CarInspectorPatches {
 
                 if (cars.Any(c => c.air!.handbrakeApplied)) {
                     strip.AddButton($"Release {TextSprites.HandbrakeWheel}", () => Utility.ReleaseAllHandbrakes(cars))!
-                        .Tooltip("Release handbrakes", $"Iterates over cars in this consist and releases {TextSprites.HandbrakeWheel}.");
+                         .Tooltip("Release handbrakes", $"Iterates over cars in this consist and releases {TextSprites.HandbrakeWheel}.");
                 }
 
                 if (cars.Any(c => c.EndAirSystemIssue())) {
                     strip.AddButton("Connect Air", () => Utility.ConnectAir(cars))!
-                        .Tooltip("Connect Consist Air", "Iterates over each car in this consist and connects gladhands and opens anglecocks.");
+                         .Tooltip("Connect Consist Air", "Iterates over each car in this consist and connects gladhands and opens anglecocks.");
                 }
             })!
         );
@@ -122,4 +125,25 @@ public static class CarInspectorPatches {
 
     #endregion
 
+    #region copy repair destination to rest of consist
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(CarInspector), "PopulateEquipmentPanel")]
+    public static void PopulateEquipmentPanel(UIPanelBuilder builder, Car ____car) {
+        ____car.KeyValueObject!.Observe(OverrideDestination.Repair.Key()!, _ => builder.Rebuild(), false);
+        if (____car.HasOverrideDestination(OverrideDestination.Repair)) {
+            builder.ButtonStrip(strip => {
+                strip.AddButton("<sprite name=Copy><sprite name=Coupled>", () => {
+                    ____car.TryGetOverrideDestination(OverrideDestination.Repair, OpsController.Shared!, out var result);
+                    ____car.EnumerateCoupled(Car.End.F)!
+                           .Where(o => o != ____car)
+                           .Do(o => { o.SetOverrideDestination(OverrideDestination.Repair, result); });
+
+                    builder.Rebuild();
+                })!.Tooltip("Copy repair destination", "Copy this car's repair destination to the other cars in consist.");
+            });
+        }
+    }
+
+    #endregion
 }
