@@ -24,7 +24,7 @@ public static class CarInspectorPatches {
     [HarmonyPatch(typeof(CarInspector), "Populate")]
     public static void Populate(ref Window ____window) {
         var windowAutoHeight = ____window.gameObject!.GetComponent<CarInspectorAutoHeightBehavior>()!;
-        windowAutoHeight.ExpandOrders(AutoEngineerMode.Off, 30);
+        windowAutoHeight.ExpandOrders(AutoEngineerMode.Off, 50);
     }
 
     #region remember last selected tab when selecting new car
