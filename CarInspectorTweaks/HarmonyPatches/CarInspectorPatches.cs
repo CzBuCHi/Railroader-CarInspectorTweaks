@@ -106,12 +106,18 @@ public static class CarInspectorPatches
                 var cars = locomotive.EnumerateCoupled()!.ToList()!;
 
                 if (cars.Any(c => c.air!.handbrakeApplied)) {
-                    strip.AddButton($"Release {TextSprites.HandbrakeWheel}", () => Utility.ReleaseAllHandbrakes(cars))!
+                    strip.AddButton($"Release {TextSprites.HandbrakeWheel}", () => {
+                             Utility.ReleaseAllHandbrakes(cars);
+                             strip.Rebuild();
+                         })!
                          .Tooltip("Release handbrakes", $"Iterates over cars in this consist and releases {TextSprites.HandbrakeWheel}.");
                 }
 
                 if (cars.Any(c => c.EndAirSystemIssue())) {
-                    strip.AddButton("Connect Air", () => Utility.ConnectAir(cars))!
+                    strip.AddButton("Connect Air", () => {
+                             Utility.ConnectAir(cars);
+                             strip.Rebuild();
+                         })!
                          .Tooltip("Connect Consist Air", "Iterates over each car in this consist and connects gladhands and opens anglecocks.");
                 }
             })!
