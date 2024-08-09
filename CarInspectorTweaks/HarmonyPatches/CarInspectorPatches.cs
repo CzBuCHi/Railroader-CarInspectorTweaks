@@ -23,7 +23,7 @@ using Car = Car;
 public static class CarInspectorPatches
 {
     [HarmonyPostfix]
-    [HarmonyPatch(typeof(CarInspector), "Populate")]
+    [HarmonyPatch(typeof(CarInspector), nameof(Populate))]
     public static void Populate(ref Window ____window) {
         var windowAutoHeight = ____window.gameObject!.GetComponent<CarInspectorAutoHeightBehavior>()!;
         windowAutoHeight.ExpandOrders(AutoEngineerMode.Off, 50);
@@ -33,7 +33,7 @@ public static class CarInspectorPatches
     #region remember last selected tab when selecting new car
 
     [HarmonyPrefix]
-    [HarmonyPatch(typeof(CarInspector), "Populate")]
+    [HarmonyPatch(typeof(CarInspector), nameof(Populate))]
     public static void Populate(Car car, ref Car? ____car, ref UIState<string?> ____selectedTabState) {
         if (____car != null) {
             CarInspectorTweaksPlugin.Settings.TabStates[____car.Archetype] = ____selectedTabState.Value;
@@ -50,7 +50,7 @@ public static class CarInspectorPatches
     #region add manual controls to ordders tab
 
     [HarmonyPostfix]
-    [HarmonyPatch(typeof(CarInspector), "PopulateAIPanel")]
+    [HarmonyPatch(typeof(CarInspector), nameof(PopulateAIPanel))]
     public static void PopulateAIPanel(UIPanelBuilder builder, CarInspector __instance, Car ____car, Window ____window) {
         var persistence = new AutoEngineerPersistence(____car.KeyValueObject!);
         var locomotive = (BaseLocomotive)____car;
@@ -125,7 +125,7 @@ public static class CarInspectorPatches
     }
 
     [HarmonyReversePatch]
-    [HarmonyPatch(typeof(CarInspector), "SelectConsist")]
+    [HarmonyPatch(typeof(CarInspector), nameof(SelectConsist))]
     public static void SelectConsist(CarInspector __instance) {
     }
 
@@ -134,7 +134,7 @@ public static class CarInspectorPatches
     #region copy repair destination to rest of consist
 
     [HarmonyPostfix]
-    [HarmonyPatch(typeof(CarInspector), "PopulateEquipmentPanel")]
+    [HarmonyPatch(typeof(CarInspector), nameof(PopulateEquipmentPanel))]
     public static void PopulateEquipmentPanel(UIPanelBuilder builder, Car ____car) {
         ____car.KeyValueObject!.Observe(OverrideDestination.Repair.Key()!, _ => builder.Rebuild(), false);
         if (____car.HasOverrideDestination(OverrideDestination.Repair)) {
@@ -149,6 +149,25 @@ public static class CarInspectorPatches
                 })!.Tooltip("Copy repair destination", "Copy this car's repair destination to the other cars in consist.");
             });
         }
+    }
+
+    #endregion
+
+    #region add car speed to to car tab
+
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(CarInspector), nameof(PopulateCarPanel))]
+    public static void PopulateCarPanel(UIPanelBuilder builder, Car ____car) {
+        if (____car.Archetype == CarArchetype.LocomotiveDiesel ||
+            ____car.Archetype == CarArchetype.LocomotiveSteam) {
+            return;
+        }
+
+        builder.AddField("Speed", () => {
+            var velocityMphAbs = ____car.VelocityMphAbs;
+            velocityMphAbs = velocityMphAbs >= 1.0 ? Mathf.RoundToInt(velocityMphAbs) : velocityMphAbs > 0.10000000149011612 ? 1f : 0.0f;
+            return velocityMphAbs + " MPH";
+        }, UIPanelBuilder.Frequency.Periodic);
     }
 
     #endregion
