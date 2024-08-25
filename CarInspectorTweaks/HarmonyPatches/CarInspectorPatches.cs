@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using CarInspectorResizer.Behaviors;
 using CarInspectorTweaks.Extensions;
@@ -8,6 +9,7 @@ using Model;
 using Model.AI;
 using Model.Definition;
 using Model.OpsNew;
+using Model.Physics;
 using UI.Builder;
 using UI.CarInspector;
 using UI.Common;
@@ -168,6 +170,18 @@ public static class CarInspectorPatches
             velocityMphAbs = velocityMphAbs >= 1.0 ? Mathf.RoundToInt(velocityMphAbs) : velocityMphAbs > 0.10000000149011612 ? 1f : 0.0f;
             return velocityMphAbs + " MPH";
         }, UIPanelBuilder.Frequency.Periodic);
+    }
+
+    #endregion
+
+    #region strong man max speed changed to 5MPH
+
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(IntegrationSet), nameof(AddVelocityToCar))]
+    public static void AddVelocityToCar(Car car, float velocity, ref float maxVelocity) {
+        if (Math.Abs(maxVelocity - 1.34111786f) < 0.00000001f) {
+            maxVelocity = 1.34111786f * 2;
+        }
     }
 
     #endregion
