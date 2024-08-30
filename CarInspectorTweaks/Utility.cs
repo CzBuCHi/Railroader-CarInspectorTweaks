@@ -35,4 +35,14 @@ public static class Utility {
         consist.Do(c => c.SetHandbrake(false));
     }
 
+    public static void BleedAll(List<Car> consist) {
+        consist.Do(c => {
+            if (c.SupportsBleed()) {
+                c.SetBleed();
+            }
+        });
+    }
+
+    
+
 }

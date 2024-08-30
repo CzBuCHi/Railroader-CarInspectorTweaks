@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using CarInspectorResizer.Behaviors;
 using CarInspectorTweaks.Extensions;
@@ -9,7 +8,6 @@ using Model;
 using Model.AI;
 using Model.Definition;
 using Model.OpsNew;
-using Model.Physics;
 using UI.Builder;
 using UI.CarInspector;
 using UI.Common;
@@ -17,8 +15,6 @@ using UI.EngineControls;
 using UnityEngine;
 
 namespace CarInspectorTweaks.HarmonyPatches;
-
-using Car = Car;
 
 [PublicAPI]
 [HarmonyPatch]
@@ -29,6 +25,7 @@ public static class CarInspectorPatches
     public static void Populate(ref Window ____window) {
         var windowAutoHeight = ____window.gameObject!.GetComponent<CarInspectorAutoHeightBehavior>()!;
         windowAutoHeight.ExpandOrders(AutoEngineerMode.Off, 50);
+        windowAutoHeight.ExpandTab("car", 30);
         windowAutoHeight.ExpandTab("equipment", 30);
     }
 
@@ -158,8 +155,8 @@ public static class CarInspectorPatches
     #region add car speed to to car tab
 
     [HarmonyPrefix]
-    [HarmonyPatch(typeof(CarInspector), nameof(PopulateCarPanel))]
-    public static void PopulateCarPanel(UIPanelBuilder builder, Car ____car) {
+    [HarmonyPatch(typeof(CarInspector), "PopulateCarPanel")]
+    public static void PopulateCarPanelPrefix(UIPanelBuilder builder, Car ____car) {
         if (____car.Archetype == CarArchetype.LocomotiveDiesel ||
             ____car.Archetype == CarArchetype.LocomotiveSteam) {
             return;
@@ -174,14 +171,15 @@ public static class CarInspectorPatches
 
     #endregion
 
-    #region strong man max speed changed to 5MPH
+    #region add 'bleed all' button to car tab
 
-    [HarmonyPrefix]
-    [HarmonyPatch(typeof(IntegrationSet), nameof(AddVelocityToCar))]
-    public static void AddVelocityToCar(Car car, float velocity, ref float maxVelocity) {
-        if (Math.Abs(maxVelocity - 1.34111786f) < 0.00000001f) {
-            maxVelocity = 1.34111786f * 2;
-        }
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(CarInspector), "PopulateCarPanel")]
+    public static void PopulateCarPanelPostfix(UIPanelBuilder builder, Car ____car) {
+        builder.ButtonStrip(strip => {
+            strip.AddButtonCompact("Bleed all", () => Utility.BleedAll(____car.EnumerateCoupled()!.ToList()))!
+                 .Tooltip("Bleed all Valves", "Bleed the brakes to release pressure from the consist brake system.");
+        });
     }
 
     #endregion
