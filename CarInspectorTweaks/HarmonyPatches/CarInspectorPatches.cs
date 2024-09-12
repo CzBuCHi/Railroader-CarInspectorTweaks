@@ -102,7 +102,12 @@ public static class CarInspectorPatches
         builder.AddField("Train Brake", trainBrake);
         builder.AddField("",
             builder.ButtonStrip(strip => {
-                var cars = locomotive.EnumerateCoupled()!.ToList()!;
+                var cars = locomotive.EnumerateCoupled()!.ToList();
+
+                cars.Do(car => { 
+                    strip.AddObserver(car.KeyValueObject.Observe(PropertyChange.KeyForControl(PropertyChange.Control.Handbrake), _ => strip.Rebuild(), false));
+                    strip.AddObserver(car.KeyValueObject.Observe(PropertyChange.KeyForControl(PropertyChange.Control.CylinderCock), _ => strip.Rebuild(), false));
+                });
 
                 if (cars.Any(c => c.air!.handbrakeApplied)) {
                     strip.AddButton($"Release {TextSprites.HandbrakeWheel}", () => {
@@ -112,13 +117,11 @@ public static class CarInspectorPatches
                          .Tooltip("Release handbrakes", $"Iterates over cars in this consist and releases {TextSprites.HandbrakeWheel}.");
                 }
 
-                if (cars.Any(c => c.EndAirSystemIssue())) {
-                    strip.AddButton("Connect Air", () => {
-                             Utility.ConnectAir(cars);
-                             strip.Rebuild();
-                         })!
-                         .Tooltip("Connect Consist Air", "Iterates over each car in this consist and connects gladhands and opens anglecocks.");
-                }
+                strip.AddButton("Connect Air", () => {
+                         Utility.ConnectAir(cars);
+                         strip.Rebuild();
+                     })!
+                     .Tooltip("Connect Consist Air", "Iterates over each car in this consist and connects gladhands and opens anglecocks.");
             })!
         );
     }
