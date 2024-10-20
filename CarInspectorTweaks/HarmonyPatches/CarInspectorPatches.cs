@@ -24,7 +24,7 @@ public static class CarInspectorPatches
     [HarmonyPatch(typeof(CarInspector), nameof(Populate))]
     public static void Populate(ref Window ____window) {
         var windowAutoHeight = ____window.gameObject!.GetComponent<CarInspectorAutoHeightBehavior>()!;
-        windowAutoHeight.ExpandOrders(AutoEngineerMode.Off, 50);
+        windowAutoHeight.ExpandOrders(AutoEngineerMode.Off, 75);
         windowAutoHeight.ExpandTab("car", 30);
         windowAutoHeight.ExpandTab("equipment", 30);
     }
@@ -57,13 +57,14 @@ public static class CarInspectorPatches
         var mode = helper.Mode();
 
         if (mode == AutoEngineerMode.Off) {
-            AddManualControls(builder, locomotive, __instance, ____car);
+            AddManualControls(builder, locomotive);
+            AddToggleSwitchButtons(builder, locomotive);
         }
 
         builder.AddExpandingVerticalSpacer();
     }
 
-    private static void AddManualControls(UIPanelBuilder builder, BaseLocomotive locomotive, CarInspector __instance, Car ____car) {
+    private static void AddManualControls(UIPanelBuilder builder, BaseLocomotive locomotive) {
         var locomotiveControl = locomotive.locomotiveControl!;
         var air = locomotiveControl.air!;
         var isDiesel = locomotive.Archetype == CarArchetype.LocomotiveDiesel;
@@ -183,6 +184,27 @@ public static class CarInspectorPatches
             strip.AddButtonCompact("Bleed all", () => Utility.BleedAll(____car.EnumerateCoupled()!.ToList()))!
                  .Tooltip("Bleed all Valves", "Bleed the brakes to release pressure from the consist brake system.");
         });
+    }
+
+    #endregion
+
+    #region add 'toggle switch' button to manual ordders tab
+
+    private static void AddToggleSwitchButtons(UIPanelBuilder builder, BaseLocomotive locomotive) {
+        builder.AddField("Toggle switches",
+            builder.ButtonStrip(strip => {
+                
+                strip.AddButton("in front", () => {
+                         Utility.ToggleSwitch(locomotive, true);
+                     })!
+                     .Tooltip("Toggle switch in front", "Toggles first switch in front of consist.");
+
+                strip.AddButton("behind", () => {
+                         Utility.ToggleSwitch(locomotive, false);
+                     })!
+                     .Tooltip("Toggle switch behind", "Toggles first switch behind of consist.");
+            })!
+        );
     }
 
     #endregion
