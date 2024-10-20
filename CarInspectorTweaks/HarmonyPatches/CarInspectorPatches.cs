@@ -25,6 +25,7 @@ public static class CarInspectorPatches
     public static void Populate(ref Window ____window) {
         var windowAutoHeight = ____window.gameObject!.GetComponent<CarInspectorAutoHeightBehavior>()!;
         windowAutoHeight.ExpandOrders(AutoEngineerMode.Off, 75);
+        windowAutoHeight.ExpandOrders(AutoEngineerMode.Yard, 25);
         windowAutoHeight.ExpandTab("car", 30);
         windowAutoHeight.ExpandTab("equipment", 30);
     }
@@ -58,6 +59,9 @@ public static class CarInspectorPatches
 
         if (mode == AutoEngineerMode.Off) {
             AddManualControls(builder, locomotive);
+        }
+
+        if (mode is AutoEngineerMode.Off or AutoEngineerMode.Yard) {
             AddToggleSwitchButtons(builder, locomotive);
         }
 
@@ -188,7 +192,7 @@ public static class CarInspectorPatches
 
     #endregion
 
-    #region add 'toggle switch' button to manual ordders tab
+    #region add 'toggle switch' button to manual orders and yard tab
 
     private static void AddToggleSwitchButtons(UIPanelBuilder builder, BaseLocomotive locomotive) {
         builder.AddField("Toggle switches",
