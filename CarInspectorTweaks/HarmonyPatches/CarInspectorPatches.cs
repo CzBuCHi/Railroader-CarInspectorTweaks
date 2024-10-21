@@ -1,6 +1,5 @@
 using System.Linq;
 using CarInspectorResizer.Behaviors;
-using CarInspectorTweaks.Extensions;
 using Game.Messages;
 using HarmonyLib;
 using JetBrains.Annotations;
@@ -53,9 +52,9 @@ public static class CarInspectorPatches
     [HarmonyPatch(typeof(CarInspector), nameof(PopulateAIPanel))]
     public static void PopulateAIPanel(UIPanelBuilder builder, CarInspector __instance, Car ____car, Window ____window) {
         var persistence = new AutoEngineerPersistence(____car.KeyValueObject!);
-        var locomotive = (BaseLocomotive)____car;
-        var helper = new AutoEngineerOrdersHelper(locomotive, persistence);
-        var mode = helper.Mode();
+        var locomotive  = (BaseLocomotive)____car;
+        var helper      = new AutoEngineerOrdersHelper(locomotive, persistence);
+        var mode        = helper.Mode();
 
         if (mode == AutoEngineerMode.Off) {
             AddManualControls(builder, locomotive);
@@ -70,8 +69,8 @@ public static class CarInspectorPatches
 
     private static void AddManualControls(UIPanelBuilder builder, BaseLocomotive locomotive) {
         var locomotiveControl = locomotive.locomotiveControl!;
-        var air = locomotiveControl.air!;
-        var isDiesel = locomotive.Archetype == CarArchetype.LocomotiveDiesel;
+        var air               = locomotiveControl.air!;
+        var isDiesel          = locomotive.Archetype == CarArchetype.LocomotiveDiesel;
 
         var throttle = builder.AddSliderQuantized(() => locomotiveControl.AbstractThrottle,
             () => {
@@ -109,7 +108,7 @@ public static class CarInspectorPatches
             builder.ButtonStrip(strip => {
                 var cars = locomotive.EnumerateCoupled()!.ToList();
 
-                cars.Do(car => { 
+                cars.Do(car => {
                     strip.AddObserver(car.KeyValueObject.Observe(PropertyChange.KeyForControl(PropertyChange.Control.Handbrake), _ => strip.Rebuild(), false));
                     strip.AddObserver(car.KeyValueObject.Observe(PropertyChange.KeyForControl(PropertyChange.Control.CylinderCock), _ => strip.Rebuild(), false));
                 });
@@ -197,15 +196,10 @@ public static class CarInspectorPatches
     private static void AddToggleSwitchButtons(UIPanelBuilder builder, BaseLocomotive locomotive) {
         builder.AddField("Toggle switches",
             builder.ButtonStrip(strip => {
-                
-                strip.AddButton("in front", () => {
-                         Utility.ToggleSwitch(locomotive, true);
-                     })!
+                strip.AddButton("in front", () => { Utility.ToggleSwitch(locomotive, true); })!
                      .Tooltip("Toggle switch in front", "Toggles first switch in front of consist.");
 
-                strip.AddButton("behind", () => {
-                         Utility.ToggleSwitch(locomotive, false);
-                     })!
+                strip.AddButton("behind", () => { Utility.ToggleSwitch(locomotive, false); })!
                      .Tooltip("Toggle switch behind", "Toggles first switch behind of consist.");
             })!
         );
