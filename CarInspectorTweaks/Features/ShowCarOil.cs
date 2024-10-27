@@ -25,7 +25,7 @@ public static class ShowCarOil
                     field.AddLabel(() => Mathf.RoundToInt(____car.Oiled * 100) + "%", UIPanelBuilder.Frequency.Periodic)!
                          .FlexibleWidth();
 
-                    field.AddButtonCompact("Add oil", () => ____car.OffsetOiled(0.01f))!.Disable(!____car.NeedsOiling);
+                    field.AddButtonCompact("Add oil", () => ____car.OffsetOiled(0.05f))!.Disable(!____car.NeedsOiling);
                 })!
             );
         });
