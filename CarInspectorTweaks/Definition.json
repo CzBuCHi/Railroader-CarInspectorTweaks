@@ -1,13 +1,7 @@
 {
     "manifestVersion": 1,
     "id": "CarInspectorTweaks",
-    "name": "CarInspectorTweaks",
+    "name": "Car Inspector Tweaks",
     "version": "$(AssemblyVersion)",
-    "assemblies": [ "CarInspectorTweaks" ],
-    "requires": [
-        {
-            "id": "CarInspectorResizer",
-            "notBefore": "1.0.0"
-        }
-    ]
+    "assemblies": [ "CarInspectorTweaks" ]
 }

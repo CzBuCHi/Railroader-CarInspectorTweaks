@@ -1,20 +1,20 @@
-using System.Linq;
+﻿using Model;
+
+namespace CarInspectorTweaks.Features;
+
 using HarmonyLib;
 using JetBrains.Annotations;
-using Model;
 using Model.Definition.Components;
 using Model.Definition.Data;
 using RollingStock.Steam;
+using System.Linq;
 using UI.Builder;
 using UI.CarCustomizeWindow;
 
-namespace CarInspectorTweaks.HarmonyPatches;
-
-#region adds "prev / next buttons under whistle drop down
-
 [PublicAPI]
 [HarmonyPatch]
-public static class CarCustomizeWindowPatches
+[HarmonyPatchCategory("WhistleButtons")]
+public static class WhistleButtons
 {
     [HarmonyPostfix]
     [HarmonyPatch(typeof(CarCustomizeWindow), nameof(BuildSoundTabWhistle))]
@@ -22,7 +22,7 @@ public static class CarCustomizeWindowPatches
         var settings = WhistleCustomizationSettings.FromPropertyValue(____car.KeyValueObject!["whistle.custom"])
                        ?? new WhistleCustomizationSettings(whistleComponent.DefaultWhistleIdentifier!);
 
-        var whistles     = TrainController.Shared.PrefabStore.AllDefinitionInfosOfType<WhistleDefinition>().ToList();
+        var whistles     = TrainController.Shared!.PrefabStore!.AllDefinitionInfosOfType<WhistleDefinition>()!.ToList();
         var currentIndex = whistles.FindIndex(id => settings.WhistleIdentifier == id.Identifier);
         builder.AddField("",
             builder.ButtonStrip(strip => {
@@ -34,11 +34,8 @@ public static class CarCustomizeWindowPatches
         return;
 
         void UpdateWhistle(int index) {
-            ____car.KeyValueObject["whistle.custom"] = new WhistleCustomizationSettings(whistles[index].Identifier).PropertyValue;
+            ____car.KeyValueObject["whistle.custom"] = new WhistleCustomizationSettings(whistles[index]!.Identifier!).PropertyValue;
             builder.Rebuild();
-            ;
         }
     }
 }
-
-#endregion
