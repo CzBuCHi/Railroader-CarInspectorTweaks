@@ -32,36 +32,34 @@ public static class ConsistManage
             return;
         }
 
-        builder.AddField("",
-            builder.ButtonStrip(strip => {
-                var cars = locomotive.EnumerateCoupled()!.ToList();
+        builder.ButtonStrip(strip => {
+            var cars = locomotive.EnumerateCoupled()!.ToList();
 
-                cars.Do(car => {
-                    strip.AddObserver(car.KeyValueObject!.Observe(PropertyChange.KeyForControl(PropertyChange.Control.Handbrake)!, _ => strip.Rebuild(), false)!);
-                    strip.AddObserver(car.KeyValueObject.Observe(PropertyChange.KeyForControl(PropertyChange.Control.CylinderCock)!, _ => strip.Rebuild(), false)!);
-                });
+            cars.Do(car => {
+                strip.AddObserver(car.KeyValueObject!.Observe(PropertyChange.KeyForControl(PropertyChange.Control.Handbrake)!, _ => strip.Rebuild(), false)!);
+                strip.AddObserver(car.KeyValueObject.Observe(PropertyChange.KeyForControl(PropertyChange.Control.CylinderCock)!, _ => strip.Rebuild(), false)!);
+            });
 
-                if (cars.Any(c => c.air!.handbrakeApplied)) {
-                    strip.AddButton($"Release {TextSprites.HandbrakeWheel}", () => {
-                             ReleaseAllHandbrakes(cars);
-                             strip.Rebuild();
-                         })!
-                         .Tooltip("Release handbrakes", $"Iterates over cars in this consist and releases {TextSprites.HandbrakeWheel}.");
-                }
-
-                strip.AddButton("Connect Air", () => {
-                         ConnectAir(cars);
+            if (cars.Any(c => c.air!.handbrakeApplied)) {
+                strip.AddButton($"Release {TextSprites.HandbrakeWheel}", () => {
+                         ReleaseAllHandbrakes(cars);
                          strip.Rebuild();
                      })!
-                     .Tooltip("Connect Consist Air", "Iterates over each car in this consist and connects gladhands and opens anglecocks.");
+                     .Tooltip("Release handbrakes", $"Iterates over cars in this consist and releases {TextSprites.HandbrakeWheel}.");
+            }
 
-                strip.AddButton("Oil all cars", () => {
-                         OilAllCars(cars);
-                         strip.Rebuild();
-                     })!
-                     .Tooltip("Oil all cars", "Iterates over each car in this consist and add little bit of oil to all boxes.");
-            })!
-        );
+            strip.AddButton("Connect Air", () => {
+                     ConnectAir(cars);
+                     strip.Rebuild();
+                 })!
+                 .Tooltip("Connect Consist Air", "Iterates over each car in this consist and connects gladhands and opens anglecocks.");
+
+            strip.AddButton("Oil all cars", () => {
+                     OilAllCars(cars);
+                     strip.Rebuild();
+                 })!
+                 .Tooltip("Oil all cars", "Iterates over each car in this consist and add little bit of oil to all boxes.");
+        });
     }
 
     public static void ConnectAir(List<Car> consist) {
@@ -86,7 +84,7 @@ public static class ConsistManage
     }
 
     public static void OilAllCars(List<Car> consist) {
-        consist.Do(c => c.OffsetOiled(0.01f));
+        consist.Do(c => c.OffsetOiled(1f));
     }
 
     [HarmonyReversePatch]

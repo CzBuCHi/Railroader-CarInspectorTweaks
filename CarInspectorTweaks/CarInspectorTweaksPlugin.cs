@@ -82,7 +82,7 @@ public sealed class CarInspectorTweaksPlugin : SingletonPluginBase<CarInspectorT
 
     private void UnpatchAll() {
         var harmony = new Harmony(ModIdentifier);
-        harmony.UnpatchAll();
+        harmony.UnpatchAll(ModIdentifier);
     }
 
     private void ApplyPatches() {
