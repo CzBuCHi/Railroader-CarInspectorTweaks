@@ -17,8 +17,8 @@ namespace CarInspectorTweaks.Features;
 
 [PublicAPI]
 [HarmonyPatch]
-[HarmonyPatchCategory("AirHandbrakes")]
-public static class AirHandbrakes
+[HarmonyPatchCategory("ConsistManage")]
+public static class ConsistManage
 {
     [HarmonyPostfix]
     [HarmonyPatch(typeof(CarInspector), nameof(PopulateAIPanel))]
@@ -37,8 +37,8 @@ public static class AirHandbrakes
                 var cars = locomotive.EnumerateCoupled()!.ToList();
 
                 cars.Do(car => {
-                    strip.AddObserver(car.KeyValueObject.Observe(PropertyChange.KeyForControl(PropertyChange.Control.Handbrake), _ => strip.Rebuild(), false));
-                    strip.AddObserver(car.KeyValueObject.Observe(PropertyChange.KeyForControl(PropertyChange.Control.CylinderCock), _ => strip.Rebuild(), false));
+                    strip.AddObserver(car.KeyValueObject!.Observe(PropertyChange.KeyForControl(PropertyChange.Control.Handbrake)!, _ => strip.Rebuild(), false)!);
+                    strip.AddObserver(car.KeyValueObject.Observe(PropertyChange.KeyForControl(PropertyChange.Control.CylinderCock)!, _ => strip.Rebuild(), false)!);
                 });
 
                 if (cars.Any(c => c.air!.handbrakeApplied)) {
@@ -73,10 +73,10 @@ public static class AirHandbrakes
         return;
 
         static void ConnectAirCore(Car car, Car.LogicalEnd end) {
-            StateManager.ApplyLocal(new PropertyChange(car.id, KeyValueKeyFor(Car.EndGearStateKey.Anglecock, car.LogicalToEnd(end)), new FloatPropertyValue(car[end].IsCoupled ? 1f : 0f)));
+            StateManager.ApplyLocal(new PropertyChange(car.id!, KeyValueKeyFor(Car.EndGearStateKey.Anglecock, car.LogicalToEnd(end)), new FloatPropertyValue(car[end]!.IsCoupled ? 1f : 0f)));
 
             if (car.TryGetAdjacentCar(end, out var car2)) {
-                StateManager.ApplyLocal(new SetGladhandsConnected(car.id, car2.id, true));
+                StateManager.ApplyLocal(new SetGladhandsConnected(car.id!, car2!.id!, true));
             }
         }
     }

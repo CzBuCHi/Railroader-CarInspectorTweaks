@@ -54,7 +54,7 @@ public sealed class CarInspectorTweaksPlugin : SingletonPluginBase<CarInspectorT
                .Tooltip("Show car speed", "Shows car speed on car tab.");
 
         builder.AddField("Show car oil", builder.AddToggle(() => Settings.ShowCarOil, o => Settings.ShowCarOil = o)!)!
-               .Tooltip("Show car oil", "Shows car oil on car tab.");
+               .Tooltip("Show car oil", "Shows car oil state on car tab.");
 
         builder.AddField("Bleed all", builder.AddToggle(() => Settings.BleedAll, o => Settings.BleedAll = o)!)!
                .Tooltip("Bleed all", "Adds 'Bleed all' button to car panel.");
@@ -68,8 +68,8 @@ public sealed class CarInspectorTweaksPlugin : SingletonPluginBase<CarInspectorT
         builder.AddField("Update customize window", builder.AddToggle(() => Settings.UpdateCarCustomizeWindow, o => Settings.UpdateCarCustomizeWindow = o)!)!
                .Tooltip("Update customize window", "Updates car customize window when different car is selected.");
 
-        builder.AddField("Air & brake buttons", builder.AddToggle(() => Settings.AirHandbrakes, o => Settings.AirHandbrakes = o)!)!
-               .Tooltip("Air & brake buttons", "Adds 'connect air' and 'rele3ase handbrakes' buttons to manual orders and yard tab.");
+        builder.AddField("Manage Consist", builder.AddToggle(() => Settings.ConsistManage, o => Settings.ConsistManage = o)!)!
+               .Tooltip("Manage Consist", "Adds 'connect air', 'release handbrakes' and 'oil all cars' buttons to manual orders and yard tab.");
 
         builder.AddButton("Save", ModTabDidClose);
     }
@@ -128,8 +128,8 @@ public sealed class CarInspectorTweaksPlugin : SingletonPluginBase<CarInspectorT
             harmony.PatchCategory("UpdateCarCustomizeWindow");
         }
 
-        if (Settings.AirHandbrakes) {
-            harmony.PatchCategory("AirHandbrakes");
+        if (Settings.ConsistManage) {
+            harmony.PatchCategory("ConsistManage");
         }
     }
 }

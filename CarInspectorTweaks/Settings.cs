@@ -16,6 +16,6 @@ public class Settings
     public bool ToggleSwitch             { get; set; }
     public bool ManualControls           { get; set; }
     public bool UpdateCarCustomizeWindow { get; set; }
-    public bool AirHandbrakes            { get; set; }
+    public bool ConsistManage            { get; set; }
     public bool ShowCarOil               { get; set; }
 }
