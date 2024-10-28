@@ -15,8 +15,8 @@ namespace CarInspectorTweaks.Features;
 
 [PublicAPI]
 [HarmonyPatch]
-[HarmonyPatchCategory("BleedAll")]
-public static class BleedAll
+[HarmonyPatchCategory("Follow_BleedAll")]
+public static class FollowBleedAll
 {
     [HarmonyTranspiler]
     [HarmonyPatch(typeof(CarInspector), nameof(PopulateCarPanel))]
@@ -50,7 +50,7 @@ public static class BleedAll
         }
 
         if (!valid) {
-            Log.Error("CarInspector.PopulateCarPanel has changed - 'BleedAll' disabled");
+            Log.Error("CarInspector.PopulateCarPanel has changed - 'Follow_BleedAll' disabled");
         } else {
             codeInstructions.RemoveRange(start + 1, 8);
         }
@@ -68,8 +68,15 @@ public static class BleedAll
             hStack.AddButton("Follow", () => CameraSelector.shared!.FollowCar(____car))!
                   .Tooltip("Follow Car", "Jump the overhead camera to this car and track it.");
 
-            hStack.AddButton("Bleed all", () => Execute(____car.EnumerateCoupled()!.ToList()))!
-                  .Tooltip("Bleed all Valves", "Bleed the brakes to release pressure from the consist brake system.");
+            if (CarInspectorTweaksPlugin.Settings.BleedAll) {
+                hStack.AddButton("Bleed all", () => Execute(____car.EnumerateCoupled()!.ToList()))!
+                      .Tooltip("Bleed all Valves", "Bleed the brakes to release pressure from the consist brake system.");
+            }
+
+            if (CarInspectorTweaksPlugin.Settings.FollowButtonOnCarPanel) {
+               hStack.AddButton("Follow", () => CameraSelector.shared!.FollowCar(____car))!
+                     .Tooltip("Follow Car", "Jump the overhead camera to this car and track it.");
+            }
 
             hStack.Spacer();
             if (!StateManager.IsSandbox) {

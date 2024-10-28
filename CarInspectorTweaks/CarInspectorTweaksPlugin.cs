@@ -59,6 +59,9 @@ public sealed class CarInspectorTweaksPlugin : SingletonPluginBase<CarInspectorT
         builder.AddField("Bleed all", builder.AddToggle(() => Settings.BleedAll, o => Settings.BleedAll = o)!)!
                .Tooltip("Bleed all", "Adds 'Bleed all' button to car panel.");
 
+        builder.AddField("Follow button", builder.AddToggle(() => Settings.FollowButtonOnCarPanel, o => Settings.FollowButtonOnCarPanel = o)!)!
+               .Tooltip("Follow button", "Adds 'Follow' button to car panel.");
+
         builder.AddField("Toggle switch", builder.AddToggle(() => Settings.ToggleSwitch, o => Settings.ToggleSwitch = o)!)!
                .Tooltip("Toggle switch", "Adds 'toggle switch' button to manual orders and yard tab.");
 
@@ -112,8 +115,8 @@ public sealed class CarInspectorTweaksPlugin : SingletonPluginBase<CarInspectorT
             harmony.PatchCategory("ShowCarOil");
         }
 
-        if (Settings.BleedAll) {
-            harmony.PatchCategory("BleedAll");
+        if (Settings.FollowButtonOnCarPanel || Settings.BleedAll) {
+            harmony.PatchCategory("Follow_BleedAll");
         }
 
         if (Settings.ManualControls) {

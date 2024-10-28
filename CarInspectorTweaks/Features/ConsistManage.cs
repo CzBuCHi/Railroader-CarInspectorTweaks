@@ -23,21 +23,13 @@ public static class ConsistManage
     [HarmonyPostfix]
     [HarmonyPatch(typeof(CarInspector), nameof(PopulateAIPanel))]
     public static void PopulateAIPanel(UIPanelBuilder builder, CarInspector __instance, Car ____car, Window ____window) {
-        var persistence = new AutoEngineerPersistence(____car.KeyValueObject!);
-        var locomotive  = (BaseLocomotive)____car;
-        var helper      = new AutoEngineerOrdersHelper(locomotive, persistence);
-        var mode        = helper.Mode();
-
-        if (mode == AutoEngineerMode.Road) {
-            return;
-        }
-
         builder.ButtonStrip(strip => {
-            var cars = locomotive.EnumerateCoupled()!.ToList();
+            var cars = ____car.EnumerateCoupled()!.ToList();
 
             cars.Do(car => {
                 strip.AddObserver(car.KeyValueObject!.Observe(PropertyChange.KeyForControl(PropertyChange.Control.Handbrake)!, _ => strip.Rebuild(), false)!);
                 strip.AddObserver(car.KeyValueObject.Observe(PropertyChange.KeyForControl(PropertyChange.Control.CylinderCock)!, _ => strip.Rebuild(), false)!);
+                strip.AddObserver(car.KeyValueObject.Observe("oiled", _ => strip.Rebuild(), false)!);
             });
 
             if (cars.Any(c => c.air!.handbrakeApplied)) {
@@ -48,21 +40,48 @@ public static class ConsistManage
                      .Tooltip("Release handbrakes", $"Iterates over cars in this consist and releases {TextSprites.HandbrakeWheel}.");
             }
 
-            strip.AddButton("Connect Air", () => {
-                     ConnectAir(cars);
-                     strip.Rebuild();
-                 })!
-                 .Tooltip("Connect Consist Air", "Iterates over each car in this consist and connects gladhands and opens anglecocks.");
+            if (!IsAirConnected(cars)) {
+                strip.AddButton("Connect Air", () => {
+                         ConnectAir(cars);
+                         strip.Rebuild();
+                     })!
+                     .Tooltip("Connect Consist Air", "Iterates over each car in this consist and connects gladhands and opens anglecocks.");
 
-            strip.AddButton("Oil all cars", () => {
-                     OilAllCars(cars);
-                     strip.Rebuild();
-                 })!
-                 .Tooltip("Oil all cars", "Iterates over each car in this consist and add little bit of oil to all boxes.");
+            }
+
+            if (cars.Any(o => o.NeedsOiling)) {
+                strip.AddButton("Oil all cars", () => {
+                         OilAllCars(cars);
+                         strip.Rebuild();
+                     })!
+                     .Tooltip("Oil all cars", "Iterates over each car in this consist and add oil to all boxes.");
+            }
         });
     }
 
-    public static void ConnectAir(List<Car> consist) {
+    private static bool IsAirConnected(List<Car> consist) {
+        var result = true;
+        foreach (var car in consist) {
+            CheckAir(car, car.EndGearA!, Car.LogicalEnd.A);
+            CheckAir(car, car.EndGearB!, Car.LogicalEnd.B);
+        }
+
+        return result;
+
+        void CheckAir(Car car, Car.EndGear endGear, Car.LogicalEnd end) {
+            if (car.CoupledTo(end)) {
+                if (car.AirConnectedTo(end) == null || endGear.AnglecockSetting < 0.999f) {
+                    result = false;
+                }
+            } else {
+                if (endGear.AnglecockSetting > 0.001f) {
+                    result = false;
+                }
+            }
+        }
+    }
+
+    private static void ConnectAir(List<Car> consist) {
         foreach (var car in consist) {
             ConnectAirCore(car, Car.LogicalEnd.A);
             ConnectAirCore(car, Car.LogicalEnd.B);
@@ -79,11 +98,11 @@ public static class ConsistManage
         }
     }
 
-    public static void ReleaseAllHandbrakes(List<Car> consist) {
+    private static void ReleaseAllHandbrakes(List<Car> consist) {
         consist.Do(c => c.SetHandbrake(false));
     }
 
-    public static void OilAllCars(List<Car> consist) {
+    private static void OilAllCars(List<Car> consist) {
         consist.Do(c => c.OffsetOiled(1f));
     }
 

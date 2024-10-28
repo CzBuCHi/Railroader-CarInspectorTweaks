@@ -13,6 +13,7 @@ public class Settings
     public bool CopyRepairDestination    { get; set; }
     public bool ShowCarSpeed             { get; set; }
     public bool BleedAll                 { get; set; }
+    public bool FollowButtonOnCarPanel   { get; set; }
     public bool ToggleSwitch             { get; set; }
     public bool ManualControls           { get; set; }
     public bool UpdateCarCustomizeWindow { get; set; }
