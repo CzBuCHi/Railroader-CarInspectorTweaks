@@ -7,11 +7,9 @@ using Game.State;
 using HarmonyLib;
 using JetBrains.Annotations;
 using Model;
-using Model.AI;
 using UI.Builder;
 using UI.CarInspector;
 using UI.Common;
-using UI.EngineControls;
 
 namespace CarInspectorTweaks.Features;
 
@@ -26,10 +24,12 @@ public static class ConsistManage
         builder.ButtonStrip(strip => {
             var cars = ____car.EnumerateCoupled()!.ToList();
 
+            float oiledMin = 1;
             cars.Do(car => {
                 strip.AddObserver(car.KeyValueObject!.Observe(PropertyChange.KeyForControl(PropertyChange.Control.Handbrake)!, _ => strip.Rebuild(), false)!);
                 strip.AddObserver(car.KeyValueObject.Observe(PropertyChange.KeyForControl(PropertyChange.Control.CylinderCock)!, _ => strip.Rebuild(), false)!);
                 strip.AddObserver(car.KeyValueObject.Observe("oiled", _ => strip.Rebuild(), false)!);
+                oiledMin = Math.Min(oiledMin, car.Oiled);
             });
 
             if (cars.Any(c => c.air!.handbrakeApplied)) {
@@ -46,16 +46,18 @@ public static class ConsistManage
                          strip.Rebuild();
                      })!
                      .Tooltip("Connect Consist Air", "Iterates over each car in this consist and connects gladhands and opens anglecocks.");
-
             }
 
-            if (cars.Any(o => o.NeedsOiling)) {
-                strip.AddButton("Oil all cars", () => {
+            if (cars.Any(o => o.Oiled < CarInspectorTweaksPlugin.Settings.OilThreshold)) {
+                strip.AddButton($"Oil cars (low: {oiledMin:0%})", () => {
                          OilAllCars(cars);
                          strip.Rebuild();
                      })!
                      .Tooltip("Oil all cars", "Iterates over each car in this consist and add oil to all boxes.");
             }
+
+            strip.AddButton("Follow", () => CameraSelector.shared!.FollowCar(____car))!
+                 .Tooltip("Follow Car", "Jump the overhead camera to this car and track it.");
         });
     }
 

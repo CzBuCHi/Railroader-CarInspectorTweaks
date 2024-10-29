@@ -24,6 +24,8 @@ Simple mod, that modifies Car inspector dialog:
     - Updates car customize window when different car that can be customized is selected.
 1. Manage Consist
     - Adds 'connect air', 'release handbrakes' and 'oil all cars' buttons to manual orders and yard tab.
+    - buttons are visible only if needed
+    - oil all cars buttons show oil status of worst car in consist
 
 ## Installation
 

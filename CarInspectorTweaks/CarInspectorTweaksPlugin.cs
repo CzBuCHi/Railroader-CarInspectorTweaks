@@ -7,13 +7,12 @@ using UI.Builder;
 namespace CarInspectorTweaks;
 
 [UsedImplicitly]
-public sealed class CarInspectorTweaksPlugin : SingletonPluginBase<CarInspectorTweaksPlugin>, IModTabHandler
-{
+public sealed class CarInspectorTweaksPlugin : SingletonPluginBase<CarInspectorTweaksPlugin>, IModTabHandler {
     private const string ModIdentifier = "CarInspectorTweaks";
 
-    public static IModdingContext Context  { get; private set; } = null!;
-    public static IUIHelper       UiHelper { get; private set; } = null!;
-    public static Settings        Settings { get; private set; } = null!;
+    public static IModdingContext Context { get; private set; } = null!;
+    public static IUIHelper UiHelper { get; private set; } = null!;
+    public static Settings Settings { get; private set; } = null!;
 
     private readonly ILogger _Logger = Log.ForContext<CarInspectorTweaksPlugin>()!;
 
@@ -58,10 +57,7 @@ public sealed class CarInspectorTweaksPlugin : SingletonPluginBase<CarInspectorT
 
         builder.AddField("Bleed all", builder.AddToggle(() => Settings.BleedAll, o => Settings.BleedAll = o)!)!
                .Tooltip("Bleed all", "Adds 'Bleed all' button to car panel.");
-
-        builder.AddField("Follow button", builder.AddToggle(() => Settings.FollowButtonOnCarPanel, o => Settings.FollowButtonOnCarPanel = o)!)!
-               .Tooltip("Follow button", "Adds 'Follow' button to car panel.");
-
+        
         builder.AddField("Toggle switch", builder.AddToggle(() => Settings.ToggleSwitch, o => Settings.ToggleSwitch = o)!)!
                .Tooltip("Toggle switch", "Adds 'toggle switch' button to manual orders and yard tab.");
 
@@ -71,8 +67,20 @@ public sealed class CarInspectorTweaksPlugin : SingletonPluginBase<CarInspectorT
         builder.AddField("Update customize window", builder.AddToggle(() => Settings.UpdateCarCustomizeWindow, o => Settings.UpdateCarCustomizeWindow = o)!)!
                .Tooltip("Update customize window", "Updates car customize window when different car is selected.");
 
-        builder.AddField("Manage Consist", builder.AddToggle(() => Settings.ConsistManage, o => Settings.ConsistManage = o)!)!
+        builder.AddField("Manage Consist", builder.AddToggle(() => Settings.ConsistManage, o => {
+            Settings.ConsistManage = o;
+            builder.Rebuild();
+        })!)!
                .Tooltip("Manage Consist", "Adds 'connect air', 'release handbrakes' and 'oil all cars' buttons to manual orders and yard tab.");
+
+        if (Settings.ConsistManage) {
+
+            builder.AddField("Oil Threshold", builder.AddSliderQuantized(() => Settings.OilThreshold,
+                       () => (Settings.OilThreshold * 100).ToString("0") + "%",
+                       o => Settings.OilThreshold = o, 0.01f, 0, 1,
+                       o => Settings.OilThreshold = o)!)!
+                   .Tooltip("Oil Threshold", "Show 'oil all cars' button if any car has less oil than specified.");
+        }
 
         builder.AddButton("Save", ModTabDidClose);
     }
@@ -115,8 +123,8 @@ public sealed class CarInspectorTweaksPlugin : SingletonPluginBase<CarInspectorT
             harmony.PatchCategory("ShowCarOil");
         }
 
-        if (Settings.FollowButtonOnCarPanel || Settings.BleedAll) {
-            harmony.PatchCategory("Follow_BleedAll");
+        if (Settings.BleedAll) {
+            harmony.PatchCategory("BleedAll");
         }
 
         if (Settings.ManualControls) {

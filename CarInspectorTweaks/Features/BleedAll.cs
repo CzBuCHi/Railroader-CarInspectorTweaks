@@ -15,8 +15,8 @@ namespace CarInspectorTweaks.Features;
 
 [PublicAPI]
 [HarmonyPatch]
-[HarmonyPatchCategory("Follow_BleedAll")]
-public static class FollowBleedAll
+[HarmonyPatchCategory("BleedAll")]
+public static class BleedAll
 {
     [HarmonyTranspiler]
     [HarmonyPatch(typeof(CarInspector), nameof(PopulateCarPanel))]
@@ -67,17 +67,10 @@ public static class FollowBleedAll
 
             hStack.AddButton("Follow", () => CameraSelector.shared!.FollowCar(____car))!
                   .Tooltip("Follow Car", "Jump the overhead camera to this car and track it.");
-
-            if (CarInspectorTweaksPlugin.Settings.BleedAll) {
-                hStack.AddButton("Bleed all", () => Execute(____car.EnumerateCoupled()!.ToList()))!
-                      .Tooltip("Bleed all Valves", "Bleed the brakes to release pressure from the consist brake system.");
-            }
-
-            if (CarInspectorTweaksPlugin.Settings.FollowButtonOnCarPanel) {
-               hStack.AddButton("Follow", () => CameraSelector.shared!.FollowCar(____car))!
-                     .Tooltip("Follow Car", "Jump the overhead camera to this car and track it.");
-            }
-
+            
+            hStack.AddButton("Bleed all", () => Execute(____car.EnumerateCoupled()!.ToList()))!
+                    .Tooltip("Bleed all Valves", "Bleed the brakes to release pressure from the consist brake system.");
+            
             hStack.Spacer();
             if (!StateManager.IsSandbox) {
                 return;
