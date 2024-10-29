@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Game.Messages;
 using HarmonyLib;
 using JetBrains.Annotations;
 using Model;
-using Model.AI;
 using Track;
 using UI.Builder;
 using UI.CarInspector;
 using UI.Common;
-using UI.EngineControls;
 
 namespace CarInspectorTweaks.Features;
 
@@ -22,38 +19,27 @@ public static class ToggleSwitch
     [HarmonyPostfix]
     [HarmonyPatch(typeof(CarInspector), nameof(PopulateAIPanel))]
     public static void PopulateAIPanel(UIPanelBuilder builder, CarInspector __instance, Car ____car, Window ____window) {
-        var persistence = new AutoEngineerPersistence(____car.KeyValueObject!);
-        var locomotive  = (BaseLocomotive)____car;
-        var helper      = new AutoEngineerOrdersHelper(locomotive, persistence);
-        var mode        = helper.Mode();
-
-        if (mode is AutoEngineerMode.Off or AutoEngineerMode.Yard) {
-            AddToggleSwitchButtons(builder, locomotive);
-        }
-    }
-
-    private static void AddToggleSwitchButtons(UIPanelBuilder builder, BaseLocomotive locomotive) {
         builder.AddField("Toggle switch",
             builder.ButtonStrip(strip => {
-                strip.AddButton("in front", Execute(locomotive, true))!
+                strip.AddButton("in front", Execute(____car, true))!
                      .Tooltip("Toggle switch in front", "Toggles first switch in front of consist.");
 
-                strip.AddButton("behind", Execute(locomotive, false))!
+                strip.AddButton("behind", Execute(____car, false))!
                      .Tooltip("Toggle switch behind", "Toggles first switch behind of consist.");
             })!
         );
     }
 
-    private static Action Execute(BaseLocomotive locomotive, bool front) {
+    private static Action Execute(Car car, bool front) {
         return () => {
-            var node = FindSwitch(locomotive, front);
+            var node = FindSwitch(car, front);
             node.isThrown = !node.isThrown;
         };
     }
 
-    private static TrackNode FindSwitch(BaseLocomotive locomotive, bool front) {
-        var coupledCars = locomotive.EnumerateCoupled(front ? Car.End.F : Car.End.R)!.ToList();
-        var start       = StartLocation(locomotive, coupledCars, front);
+    private static TrackNode FindSwitch(Car car, bool front) {
+        var coupledCars = car.EnumerateCoupled(front ? Car.End.F : Car.End.R)!.ToList();
+        var start       = StartLocation(car, coupledCars, front);
 
         var segment    = start.segment;
         var segmentEnd = start.EndIsA ? TrackSegment.End.B : TrackSegment.End.A;
@@ -72,16 +58,16 @@ public static class ToggleSwitch
         return node;
     }
 
-    private static Location StartLocation(BaseLocomotive locomotive, List<Car> coupledCarsCached, bool forward) {
-        var logical = locomotive.EndToLogical(forward ? Car.End.F : Car.End.R);
-        var car     = coupledCarsCached[0]!;
+    private static Location StartLocation(Car car, List<Car> coupledCarsCached, bool forward) {
+        var logical = car.EndToLogical(forward ? Car.End.F : Car.End.R);
+        var firstCar     = coupledCarsCached[0]!;
         if (logical == Car.LogicalEnd.A) {
-            var locationA = car.LocationA;
-            return !locationA.IsValid ? car.WheelBoundsA : locationA;
+            var locationA = firstCar.LocationA;
+            return !locationA.IsValid ? firstCar.WheelBoundsA : locationA;
         }
 
-        var locationB = car.LocationB;
-        return (locationB.IsValid ? locationB : car.WheelBoundsB).Flipped();
+        var locationB = firstCar.LocationB;
+        return (locationB.IsValid ? locationB : firstCar.WheelBoundsB).Flipped();
     }
 
     [HarmonyReversePatch]
