@@ -7,9 +7,11 @@ using Game.State;
 using HarmonyLib;
 using JetBrains.Annotations;
 using Model;
+using Model.AI;
 using UI.Builder;
 using UI.CarInspector;
 using UI.Common;
+using UI.EngineControls;
 
 namespace CarInspectorTweaks.Features;
 
@@ -21,19 +23,32 @@ public static class ConsistManage
     [HarmonyPostfix]
     [HarmonyPatch(typeof(CarInspector), nameof(PopulateAIPanel))]
     public static void PopulateAIPanel(UIPanelBuilder builder, CarInspector __instance, Car ____car, Window ____window) {
+        var persistence = new AutoEngineerPersistence(____car.KeyValueObject!);
+        var locomotive  = (BaseLocomotive)____car;
+        var helper      = new AutoEngineerOrdersHelper(locomotive, persistence);
+        var mode        = helper.Mode();
+      
+
         builder.ButtonStrip(strip => {
             var cars = ____car.EnumerateCoupled()!.ToList();
 
-            float oiledMin = 1;
+            var lowOilCar = cars[0]!;
             cars.Do(car => {
                 strip.AddObserver(car.KeyValueObject!.Observe(PropertyChange.KeyForControl(PropertyChange.Control.Handbrake)!, _ => strip.Rebuild(), false)!);
                 strip.AddObserver(car.KeyValueObject.Observe(PropertyChange.KeyForControl(PropertyChange.Control.CylinderCock)!, _ => strip.Rebuild(), false)!);
                 strip.AddObserver(car.KeyValueObject.Observe("oiled", _ => strip.Rebuild(), false)!);
-                oiledMin = Math.Min(oiledMin, car.Oiled);
+                if (lowOilCar.Oiled > car.Oiled) {
+                    lowOilCar = car;
+                }
             });
 
+            if (mode == AutoEngineerMode.Off) {
+                strip.AddButton("Refresh", strip.Rebuild)!
+                     .Tooltip("Refresh dialog", "Refreshes this dialog");
+            } 
+
             if (cars.Any(c => c.air!.handbrakeApplied)) {
-                strip.AddButton($"Release {TextSprites.HandbrakeWheel}", () => {
+                strip.AddButton($"{TextSprites.HandbrakeWheel}", () => {
                          ReleaseAllHandbrakes(cars);
                          strip.Rebuild();
                      })!
@@ -41,7 +56,7 @@ public static class ConsistManage
             }
 
             if (!IsAirConnected(cars)) {
-                strip.AddButton("Connect Air", () => {
+                strip.AddButton("Fix Air", () => {
                          ConnectAir(cars);
                          strip.Rebuild();
                      })!
@@ -49,11 +64,8 @@ public static class ConsistManage
             }
 
             if (cars.Any(o => o.Oiled < CarInspectorTweaksPlugin.Settings.OilThreshold)) {
-                strip.AddButton($"Oil cars (low: {oiledMin:0%})", () => {
-                         OilAllCars(cars);
-                         strip.Rebuild();
-                     })!
-                     .Tooltip("Oil all cars", "Iterates over each car in this consist and add oil to all boxes.");
+                strip.AddButton($"Low oil: {lowOilCar.Oiled:0%})", () => CameraSelector.shared!.FollowCar(lowOilCar))!
+                     .Tooltip("Jump to low oil car", "Jump the overhead camera to car with lowest oil in bearing.");
             }
 
             strip.AddButton("Follow", () => CameraSelector.shared!.FollowCar(____car))!
