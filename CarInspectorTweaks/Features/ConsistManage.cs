@@ -68,6 +68,9 @@ public static class ConsistManage
                      .Tooltip("Jump to low oil car", "Jump the overhead camera to car with lowest oil in bearing.");
             }
 
+            strip.AddButton("Select", () =>  TrainController.Shared.SelectedCar = ____car)
+                 .Tooltip("Select Car", "Selected locomotives display HUD controls. Shortcuts allow jumping to the selected car.");
+
             strip.AddButton("Follow", () => CameraSelector.shared!.FollowCar(____car))!
                  .Tooltip("Follow Car", "Jump the overhead camera to this car and track it.");
         });
