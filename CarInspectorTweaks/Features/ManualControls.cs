@@ -17,11 +17,25 @@ namespace CarInspectorTweaks.Features;
 [HarmonyPatchCategory("ManualControls")]
 public static class ManualControls
 {
+    private static Vector2? _UpdatedWindowSize;
+
     [HarmonyPostfix]
-    [HarmonyPatch(typeof(CarInspector), "Awake")]
-    public static void Awake(ref Window ____window) {
-        var size = ____window.GetContentSize();
-        ____window.SetContentSize(new Vector2(size.x - 2, size.y + 40));
+    [HarmonyPatch(typeof(CarInspector), nameof(Show))]
+    public static void Show(Car car) {
+        var instance = Traverse.Create<CarInspector>()!.Field("_instance")!.GetValue<CarInspector>()!;
+        var window   = Traverse.Create(instance)!.Field("_window")!.GetValue<Window>()!;
+
+        if (_UpdatedWindowSize == null) {
+            _UpdatedWindowSize = window.GetContentSize() + new Vector2(-2, 90);
+        }
+
+        window.SetContentSize(_UpdatedWindowSize!.Value);
+    }
+
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(CarInspector), nameof(Rebuild))]
+    public static void Rebuild(Window ____window) {
+        ____window.SetContentSize(_UpdatedWindowSize!.Value);
     }
 
     [HarmonyPostfix]
@@ -30,7 +44,7 @@ public static class ManualControls
         var persistence = new AutoEngineerPersistence(____car.KeyValueObject!);
         var locomotive  = (BaseLocomotive)____car;
         var helper      = new AutoEngineerOrdersHelper(locomotive, persistence);
-        var mode        = helper.Mode();
+        var mode        = helper.Mode;
 
         if (mode == AutoEngineerMode.Off) {
             AddManualControls(builder, locomotive);

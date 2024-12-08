@@ -23,10 +23,11 @@ public static class ConsistManage
     [HarmonyPostfix]
     [HarmonyPatch(typeof(CarInspector), nameof(PopulateAIPanel))]
     public static void PopulateAIPanel(UIPanelBuilder builder, CarInspector __instance, Car ____car, Window ____window) {
+        
         var persistence = new AutoEngineerPersistence(____car.KeyValueObject!);
         var locomotive  = (BaseLocomotive)____car;
         var helper      = new AutoEngineerOrdersHelper(locomotive, persistence);
-        var mode        = helper.Mode();
+        var mode        = helper.Mode;
       
 
         builder.ButtonStrip(strip => {
@@ -68,7 +69,7 @@ public static class ConsistManage
                      .Tooltip("Jump to low oil car", "Jump the overhead camera to car with lowest oil in bearing.");
             }
 
-            strip.AddButton("Select", () =>  TrainController.Shared.SelectedCar = ____car)
+            strip.AddButton("Select", () =>  TrainController.Shared!.SelectedCar = ____car)!
                  .Tooltip("Select Car", "Selected locomotives display HUD controls. Shortcuts allow jumping to the selected car.");
 
             strip.AddButton("Follow", () => CameraSelector.shared!.FollowCar(____car))!

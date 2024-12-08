@@ -19,4 +19,5 @@ public class Settings
     public bool  ConsistManage            { get; set; }
     public float OilThreshold             { get; set; }
     public bool  ShowCarOil               { get; set; }
+    public bool  WaypointControls         { get; set; }
 }

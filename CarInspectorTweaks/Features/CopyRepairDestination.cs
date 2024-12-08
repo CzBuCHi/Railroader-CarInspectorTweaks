@@ -5,7 +5,7 @@ using Game.State;
 using HarmonyLib;
 using JetBrains.Annotations;
 using Model;
-using Model.OpsNew;
+using Model.Ops;
 using UI.Builder;
 using UI.CarInspector;
 using UI.CompanyWindow;
@@ -17,49 +17,56 @@ namespace CarInspectorTweaks.Features;
 [HarmonyPatchCategory("CopyRepairDestination")]
 public static class CopyRepairDestination
 {
+    // Replacement of original method
     [HarmonyPrefix]
     [HarmonyPatch(typeof(CarInspector), nameof(PopulateEquipmentPanel))]
     public static bool PopulateEquipmentPanel(CarInspector __instance, UIPanelBuilder builder, Car ____car) {
+        // original code
         builder.AddConditionField(____car);
         builder.AddMileageField(____car);
         if (____car.Condition < 0.99900001287460327) {
-            var str = GameDateTimeInterval.DeltaStringMinutes((int)(CalculateRepairWorkOverall(____car) * 60.0 * 24.0))!;
+            string str = GameDateTimeInterval.DeltaStringMinutes((int) (CalculateRepairWorkOverall(____car) * 60.0 * 24.0))!;
             builder.AddField("Repair Estimate", str);
         }
-
         builder.AddRepairDestination(____car);
         builder.Spacer(2f);
         if (EquipmentPurchase.CarCanBeSold(____car)) {
             builder.AddSellDestination(____car);
             builder.Spacer(2f);
         }
-
         builder.AddExpandingVerticalSpacer();
 
+        // original code moved to CustomizeButton
+        //CustomizeButton(builder);
+
+        // my modification
         builder.ButtonStrip(strip => {
-            var    canCustomize = __instance.CanCustomize(out var reason);
-            if (canCustomize || !string.IsNullOrEmpty(reason)) {
-                var customize= strip.AddButton("Customize", __instance.ShowCustomize)!;
-                if (!canCustomize) {
-                    customize.Disable(true)!
-                             .Tooltip("Customize Not Available", reason);
-                }
-            }
+            CustomizeButton(strip);
 
             ____car.KeyValueObject!.Observe(OverrideDestination.Repair.Key()!, _ => builder.Rebuild(), false);
-            if (____car.HasOverrideDestination(OverrideDestination.Repair)) {
-                strip.AddButton("<sprite name=Copy><sprite name=Coupled>", () => {
-                    ____car.TryGetOverrideDestination(OverrideDestination.Repair, OpsController.Shared!, out var result);
-                    ____car.EnumerateCoupled(Car.End.F)!
-                           .Where(o => o != ____car)
-                           .Do(o => o.SetOverrideDestination(OverrideDestination.Repair, result));
+            strip.AddButton("<sprite name=Copy> repair destination", () => {
+                ____car.TryGetOverrideDestination(OverrideDestination.Repair, OpsController.Shared!, out var result);
+                ____car.EnumerateCoupled(Car.End.F)!
+                       .Where(o => o != ____car)
+                       .Do(o => o.SetOverrideDestination(OverrideDestination.Repair, result));
 
-                    builder.Rebuild();
-                })!.Tooltip("Copy repair destination", "Copy this car's repair destination to the other cars in consist.");
-            }
+                builder.Rebuild();
+            })!.Tooltip("Copy repair destination", "Copy this car's repair destination to the other cars in consist.");
         });
 
-        return false;
+        return false; // skip original
+
+        void CustomizeButton(UIPanelBuilder panelBuilder) {
+            var canCustomize = __instance.CanCustomize(out var reason);
+            if (!canCustomize && string.IsNullOrEmpty(reason)) {
+                return;
+            }
+
+            var configurableElement = panelBuilder.AddButton("Customize", __instance.ShowCustomize)!;
+            if (!canCustomize) {
+                configurableElement.Disable(true)!.Tooltip("Customize Not Available", reason);
+            }
+        }
     }
 
     [HarmonyReversePatch]

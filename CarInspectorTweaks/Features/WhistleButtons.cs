@@ -1,15 +1,15 @@
-﻿using Model;
-
-namespace CarInspectorTweaks.Features;
-
+﻿using System.Linq;
 using HarmonyLib;
 using JetBrains.Annotations;
+using Model;
 using Model.Definition.Components;
 using Model.Definition.Data;
 using RollingStock.Steam;
-using System.Linq;
 using UI.Builder;
 using UI.CarCustomizeWindow;
+using UI.Common;
+
+namespace CarInspectorTweaks.Features;
 
 [PublicAPI]
 [HarmonyPatch]
@@ -18,7 +18,7 @@ public static class WhistleButtons
 {
     [HarmonyPostfix]
     [HarmonyPatch(typeof(CarCustomizeWindow), nameof(BuildSoundTabWhistle))]
-    public static void BuildSoundTabWhistle(UIPanelBuilder builder, WhistleComponent whistleComponent, Car ____car) {
+    public static void BuildSoundTabWhistle(UIPanelBuilder builder, WhistleComponent whistleComponent, Car ____car, Window ____window) {
         var settings = WhistleCustomizationSettings.FromPropertyValue(____car.KeyValueObject!["whistle.custom"])
                        ?? new WhistleCustomizationSettings(whistleComponent.DefaultWhistleIdentifier!);
 
@@ -26,7 +26,7 @@ public static class WhistleButtons
         var currentIndex = whistles.FindIndex(id => settings.WhistleIdentifier == id.Identifier);
         builder.AddField("",
             builder.ButtonStrip(strip => {
-                strip.AddButton("Prev", () => UpdateWhistle(--currentIndex))!.Disable(currentIndex == 0);
+                strip.AddButton("Previous", () => UpdateWhistle(--currentIndex))!.Disable(currentIndex == 0);
                 strip.AddButton("Next", () => UpdateWhistle(++currentIndex))!.Disable(currentIndex == whistles.Count - 1);
             })!
         );

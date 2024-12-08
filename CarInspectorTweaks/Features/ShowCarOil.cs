@@ -19,15 +19,6 @@ public static class ShowCarOil
             return;
         }
 
-        builder.HStack(hStack => {
-            hStack.AddField("Oiled",
-                hStack.HStack(field => {
-                    field.AddLabel(() => Mathf.RoundToInt(____car.Oiled * 100) + "%", UIPanelBuilder.Frequency.Periodic)!
-                         .FlexibleWidth();
-
-                    field.AddButtonCompact("Add oil", () => ____car.OffsetOiled(0.05f))!.Disable(!____car.NeedsOiling);
-                })!
-            );
-        });
+        builder.AddField("Oil", () => Mathf.RoundToInt(____car.Oiled * 100) + "%", UIPanelBuilder.Frequency.Periodic);
     }
 }

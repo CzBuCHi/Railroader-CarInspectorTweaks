@@ -21,7 +21,7 @@ public static class FastStrongMan
         if (inst.opcode != OpCodes.Ldc_R4) {
             Log.Error("TrainController.HandleManualMoveCar has changed - 'FastStrongMan' disabled");
         } else {
-            inst.operand = 2.682236f;
+            inst.operand = 2.682236f; // 2x of original => top speed 6mph
         }
 
         return codeInstructions;
