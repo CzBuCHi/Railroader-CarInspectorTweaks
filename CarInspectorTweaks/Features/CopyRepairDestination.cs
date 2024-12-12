@@ -5,7 +5,7 @@ using Game.State;
 using HarmonyLib;
 using JetBrains.Annotations;
 using Model;
-using Model.OpsNew;
+using Model.Ops;
 using UI.Builder;
 using UI.CarInspector;
 using UI.CompanyWindow;
@@ -17,6 +17,7 @@ namespace CarInspectorTweaks.Features;
 [HarmonyPatchCategory("CopyRepairDestination")]
 public static class CopyRepairDestination
 {
+    // TODO
     [HarmonyPrefix]
     [HarmonyPatch(typeof(CarInspector), nameof(PopulateEquipmentPanel))]
     public static bool PopulateEquipmentPanel(CarInspector __instance, UIPanelBuilder builder, Car ____car) {

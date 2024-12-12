@@ -1,9 +1,13 @@
+using System;
+using System.Linq;
+using System.Reflection;
 using Game.Messages;
 using HarmonyLib;
 using JetBrains.Annotations;
 using Model;
 using Model.AI;
 using Model.Definition;
+using UI;
 using UI.Builder;
 using UI.CarInspector;
 using UI.Common;
@@ -30,7 +34,7 @@ public static class ManualControls
         var persistence = new AutoEngineerPersistence(____car.KeyValueObject!);
         var locomotive  = (BaseLocomotive)____car;
         var helper      = new AutoEngineerOrdersHelper(locomotive, persistence);
-        var mode        = helper.Mode();
+        var mode        = helper.Mode;
 
         if (mode == AutoEngineerMode.Off) {
             AddManualControls(builder, locomotive);

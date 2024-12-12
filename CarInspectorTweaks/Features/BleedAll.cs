@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using Game.State;
 using HarmonyLib;
 using JetBrains.Annotations;
 using Model;
-using Serilog;
 using UI.Builder;
 using UI.CarInspector;
 
@@ -16,84 +13,114 @@ namespace CarInspectorTweaks.Features;
 [PublicAPI]
 [HarmonyPatch]
 [HarmonyPatchCategory("BleedAll")]
-public static class BleedAll
+public static class BleedAllOld
 {
     [HarmonyTranspiler]
-    [HarmonyPatch(typeof(CarInspector), nameof(PopulateCarPanel))]
-    public static IEnumerable<CodeInstruction> PopulateCarPanel(IEnumerable<CodeInstruction> instructions) {
-        var codeInstructions = instructions.ToList();
-
-        // PopulateCarPanel end with this Op sequence, patch will remove instructions marked with x
-        var valid = true;
-        OpCode[] sequence = [
-            OpCodes.Call,
-            OpCodes.Ldloc_0, // x
-            OpCodes.Ldflda,  // x
-            OpCodes.Ldloc_0, // x
-            OpCodes.Ldftn,   // x
-            OpCodes.Newobj,  // x
-            OpCodes.Ldc_R4,  // x
-            OpCodes.Call,    // x
-            OpCodes.Pop,
-            OpCodes.Ret
-        ];
-
-        var start = codeInstructions.Count - sequence.Length;
-        for (int i = 0, j = start; i < sequence.Length; i++, j++) {
-            if (codeInstructions[j]!.opcode != sequence[i]) {
-                valid = false;
-            }
+    public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator, MethodBase original) {
+        var codeInspector = AccessTools.Field(original.DeclaringType!, "<>4__this");
+        if (codeInspector == null) {
+            throw new Exception("Field " + original.DeclaringType!.FullName + "::<>4__this not found");
         }
 
-        if (codeInstructions[start]!.operand is not MethodInfo { Name: "AddExpandingVerticalSpacer" }) {
-            valid = false;
+        var car = AccessTools.Field("UI.CarInspector.CarInspector:_car");
+        if (car == null) {
+            throw new Exception("Field UI.CarInspector.CarInspector:_car not found");
         }
 
-        if (!valid) {
-            Log.Error("CarInspector.PopulateCarPanel has changed - 'Follow_BleedAll' disabled");
-        } else {
-            codeInstructions.RemoveRange(start + 1, 8);
+        var tooltip = AccessTools.Method("UI.Builder.IConfigurableElement:Tooltip", [typeof(string), typeof(string)]);
+        if (tooltip == null) {
+            throw new Exception("Method UI.Builder.IConfigurableElement:Tooltip not found");
         }
 
-        return codeInstructions;
+        var bleedAllCars = AccessTools.Method(typeof(BleedAll), nameof(BleedAllCars));
+        if (bleedAllCars == null) {
+            throw new Exception("Method CarInspectorTweaks.Features.BleedAll:BleedAllCars not found");
+        }
+
+        var addButton = AccessTools.Method("UI.Builder.UIPanelBuilder:AddButton");
+        if (addButton == null) {
+            throw new Exception("Method UI.Builder.UIPanelBuilder:AddButton not found");
+        }
+
+        var codeMatcher = new CodeMatcher(instructions, generator);
+        codeMatcher.MatchStartForward(
+                       CodeMatch.Calls(() => default(UIPanelBuilder).Spacer())
+                   )
+                   .ThrowIfInvalid("Could not find any call to UIPanelBuilder.HStack")
+                   .Advance(-1)
+                   .InsertAndAdvance(new CodeInstruction(OpCodes.Ldarga_S, 1))
+                   .InsertAndAdvance(new CodeInstruction(OpCodes.Ldstr, "Bleed All"))
+                   .InsertAndAdvance(new CodeInstruction(OpCodes.Ldarg_0))
+                   .InsertAndAdvance(new CodeInstruction(OpCodes.Ldfld, codeInspector))
+                   .InsertAndAdvance(new CodeInstruction(OpCodes.Ldfld, car))
+                   .InsertAndAdvance(new CodeInstruction(OpCodes.Call, bleedAllCars))
+                   .InsertAndAdvance(new CodeInstruction(OpCodes.Call, addButton))
+                   .InsertAndAdvance(new CodeInstruction(OpCodes.Ldstr, "Bleed All"))
+                   .InsertAndAdvance(new CodeInstruction(OpCodes.Ldstr, "Bleeds all cars in consist."))
+                   .InsertAndAdvance(new CodeInstruction(OpCodes.Callvirt, tooltip))
+                   .InsertAndAdvance(new CodeInstruction(OpCodes.Pop));
+
+        return codeMatcher.Instructions();
     }
 
+    private static Action BleedAllCars(Car car) {
+        return () => {
+            car.EnumerateCoupled().Do(c => {
+                if (c.SupportsBleed()) {
+                    c.SetBleed();
+                }
+            });
+        };
+    }
+
+    public static MethodBase TargetMethod() {
+        var type = typeof(CarInspector).Assembly.GetType("UI.CarInspector.CarInspector+<>c__DisplayClass23_0");
+        if (type == null) {
+            throw new Exception("Type UI.CarInspector.CarInspector+<>c__DisplayClass23_0 not found.");
+        }
+
+        var targetMethod = AccessTools.Method(type, "<PopulateCarPanel>b__3");
+        if (targetMethod == null) {
+            throw new Exception("Method UI.CarInspector.CarInspector+<>c__DisplayClass23_0::b__3 not found.");
+        }
+
+        return targetMethod;
+    }
+}
+
+[PublicAPI]
+[HarmonyPatch]
+[HarmonyPatchCategory("BleedAll")]
+public static class BleedAll
+{
     [HarmonyPostfix]
-    [HarmonyPatch(typeof(CarInspector), nameof(PopulateCarPanel))]
-    public static void PopulateCarPanel(CarInspector __instance, UIPanelBuilder builder, Car ____car) {
-        builder.HStack(hStack => {
-            hStack.AddButton("Select", __instance.SelectConsist)!
-                  .Tooltip("Select Car", "Selected locomotives display HUD controls. Shortcuts allow jumping to the selected car.");
-
-            hStack.AddButton("Follow", () => CameraSelector.shared!.FollowCar(____car))!
-                  .Tooltip("Follow Car", "Jump the overhead camera to this car and track it.");
-            
-            hStack.AddButton("Bleed all", () => Execute(____car.EnumerateCoupled()!.ToList()))!
-                    .Tooltip("Bleed all Valves", "Bleed the brakes to release pressure from the consist brake system.");
-            
-            hStack.Spacer();
-            if (!StateManager.IsSandbox) {
-                return;
-            }
-
-            hStack.AddButton("Delete", __instance.DeleteConsist)!
-                  .Tooltip("Delete Car", "Click to delete this car. Shift-Click deletes all coupled cars.");
-        });
+    public static void Postfix(UIPanelBuilder field, object __instance) {
+        var closure      = Traverse.Create(__instance)!.Field("<>4__this")!.GetValue()!;
+        var car          = Traverse.Create(closure)!.Field<Car>("_car")!.Value!;
+        var bleedAllCars = BleedAllCars(car);
+        field.AddButtonCompact("All", bleedAllCars)!
+             .Tooltip("Bleed All Valves", "Bleed the brakes to release pressure from the train's brake system.");
     }
 
-    private static void Execute(List<Car> consist) {
-        consist.Do(c => {
+    private static Action BleedAllCars(Car car) {
+        return () => car.EnumerateCoupled()!.Do(c => {
             if (c.SupportsBleed()) {
                 c.SetBleed();
             }
         });
     }
 
-    [HarmonyReversePatch]
-    [HarmonyPatch(typeof(CarInspector), nameof(SelectConsist))]
-    private static void SelectConsist(this CarInspector carInspector) => throw new NotImplementedException("It's a stub: CarInspector.SelectConsist");
+    public static MethodBase TargetMethod() {
+        var type = typeof(CarInspector).Assembly.GetType("UI.CarInspector.CarInspector+<>c__DisplayClass23_0");
+        if (type == null) {
+            throw new Exception("Type UI.CarInspector.CarInspector+<>c__DisplayClass23_0 not found.");
+        }
 
-    [HarmonyReversePatch]
-    [HarmonyPatch(typeof(CarInspector), nameof(DeleteConsist))]
-    private static void DeleteConsist(this CarInspector carInspector) => throw new NotImplementedException("It's a stub: CarInspector.DeleteConsist");
+        var targetMethod = AccessTools.Method(type, "<PopulateCarPanel>b__4");
+        if (targetMethod == null) {
+            throw new Exception("Method UI.CarInspector.CarInspector+<>c__DisplayClass23_0::b__4 not found.");
+        }
+
+        return targetMethod;
+    }
 }
