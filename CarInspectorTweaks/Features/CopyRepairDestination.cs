@@ -1,66 +1,63 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
-using Game;
-using Game.State;
+using System.Reflection;
+using System.Reflection.Emit;
 using HarmonyLib;
 using JetBrains.Annotations;
 using Model;
 using Model.Ops;
 using UI.Builder;
 using UI.CarInspector;
-using UI.CompanyWindow;
 
 namespace CarInspectorTweaks.Features;
 
 [PublicAPI]
 [HarmonyPatch]
 [HarmonyPatchCategory("CopyRepairDestination")]
+public static class CopyRepairDestinationTranspiler
+{
+    [HarmonyTranspiler]
+    [HarmonyPatch(typeof(CarInspector), "PopulateEquipmentPanel")]
+    public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator, MethodBase original) {
+        var codeMatcher = new CodeMatcher(instructions, generator);
+        codeMatcher.MatchEndForward(
+                       CodeMatch.Calls(() => default(UIPanelBuilder).AddExpandingVerticalSpacer())
+                   )
+                   .ThrowIfInvalid("Could not find any call to UIPanelBuilder.AddExpandingVerticalSpacer")
+                   .Advance(1)
+                   .RemoveInstructions(instructions.Count() - codeMatcher.Pos - 1);
+        return codeMatcher.Instructions();
+    }
+}
+
+[PublicAPI]
+[HarmonyPatch]
+[HarmonyPatchCategory("CopyRepairDestination")]
 public static class CopyRepairDestination
 {
-    // TODO
-    [HarmonyPrefix]
+    [HarmonyPostfix]
     [HarmonyPatch(typeof(CarInspector), nameof(PopulateEquipmentPanel))]
-    public static bool PopulateEquipmentPanel(CarInspector __instance, UIPanelBuilder builder, Car ____car) {
-        builder.AddConditionField(____car);
-        builder.AddMileageField(____car);
-        if (____car.Condition < 0.99900001287460327) {
-            var str = GameDateTimeInterval.DeltaStringMinutes((int)(CalculateRepairWorkOverall(____car) * 60.0 * 24.0))!;
-            builder.AddField("Repair Estimate", str);
-        }
-
-        builder.AddRepairDestination(____car);
-        builder.Spacer(2f);
-        if (EquipmentPurchase.CarCanBeSold(____car)) {
-            builder.AddSellDestination(____car);
-            builder.Spacer(2f);
-        }
-
-        builder.AddExpandingVerticalSpacer();
-
+    public static void PopulateEquipmentPanel(CarInspector __instance, UIPanelBuilder builder, Car ____car) {
         builder.ButtonStrip(strip => {
-            var    canCustomize = __instance.CanCustomize(out var reason);
+            var canCustomize = __instance.CanCustomize(out var reason);
             if (canCustomize || !string.IsNullOrEmpty(reason)) {
-                var customize= strip.AddButton("Customize", __instance.ShowCustomize)!;
+                var customize = strip.AddButton("Customize", __instance.ShowCustomize)!;
                 if (!canCustomize) {
                     customize.Disable(true)!
                              .Tooltip("Customize Not Available", reason);
                 }
             }
 
-            ____car.KeyValueObject!.Observe(OverrideDestination.Repair.Key()!, _ => builder.Rebuild(), false);
-            if (____car.HasOverrideDestination(OverrideDestination.Repair)) {
-                strip.AddButton("<sprite name=Copy><sprite name=Coupled>", () => {
-                    ____car.TryGetOverrideDestination(OverrideDestination.Repair, OpsController.Shared!, out var result);
-                    ____car.EnumerateCoupled(Car.End.F)!
-                           .Where(o => o != ____car)
-                           .Do(o => o.SetOverrideDestination(OverrideDestination.Repair, result));
+            strip.AddButton("<sprite name=Copy><sprite name=Coupled>", () => {
+                ____car.TryGetOverrideDestination(OverrideDestination.Repair, OpsController.Shared!, out var result);
+                ____car.EnumerateCoupled(Car.End.F)!
+                       .Where(o => o != ____car)
+                       .Do(o => o.SetOverrideDestination(OverrideDestination.Repair, result));
 
-                    builder.Rebuild();
-                })!.Tooltip("Copy repair destination", "Copy this car's repair destination to the other cars in consist.");
-            }
+                builder.Rebuild();
+            })!.Tooltip("Copy repair destination", "Copy this car's repair destination to the other cars in consist.");
         });
-
-        return false;
     }
 
     [HarmonyReversePatch]
