@@ -9,11 +9,13 @@ using Game.Messages;
 using HarmonyLib;
 using JetBrains.Annotations;
 using Model;
+using Model.AI;
 using Serilog;
 using UI;
 using UI.Builder;
 using UI.CarInspector;
 using UI.EngineControls;
+using UnityEngine;
 
 namespace CarInspectorTweaks.Features;
 
@@ -184,12 +186,17 @@ public static class WaypointControlsWpControls
                 new CodeInstruction(OpCodes.Ldfld, helperField),
                 new CodeInstruction(OpCodes.Call, buildWaypointControls)
             );
-        TranspilerUtils.LogAllInstructions(original, codeMatcher.Instructions());
 
         return codeMatcher.Instructions();
     }
 
     public static void BuildWaypointControls(UIPanelBuilder builder, Car car, AutoEngineerOrdersHelper helper) {
+        var persistence = new AutoEngineerPersistence(car.KeyValueObject);
+
+        var maxValue = helper.Mode.MaxSpeedMph();
+        var control  = builder.AddSliderQuantized(() => persistence.Orders.MaxSpeedMph, persistence.Orders.MaxSpeedMph.ToString, value => helper.SetOrdersValue(maxSpeedMph: (int)value), 5f, maxValue: maxValue)!;
+        builder.AddField("Max Speed", control);
+
         builder.AddField("Waypoints",
             builder.ButtonStrip(strip => {
                 strip.AddButton("Set Waypoint", () => AutoEngineerDestinationPicker.Shared!.StartPickingLocation((BaseLocomotive)car, helper))!
