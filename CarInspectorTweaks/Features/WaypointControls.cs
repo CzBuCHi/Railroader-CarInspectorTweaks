@@ -15,7 +15,6 @@ using UI;
 using UI.Builder;
 using UI.CarInspector;
 using UI.EngineControls;
-using UnityEngine;
 
 namespace CarInspectorTweaks.Features;
 
@@ -94,7 +93,7 @@ public static class WaypointControlsInf
 {
     [HarmonyPostfix]
     public static void Postfix(UIPanelBuilder builder, object __instance) {
-        builder.AddButton("INF", () => WaypointControlsUtils.SetOrdersValue(__instance, null, null, null, 1000000f));
+        builder.AddButton("\u221e", () => WaypointControlsUtils.SetOrdersValue(__instance, null, null, null, 1000000f));
     }
 
     public static MethodBase TargetMethod() {
@@ -120,12 +119,6 @@ public static class WaypointControlsInf
 [HarmonyPatchCategory("WaypointControls")]
 public static class WaypointControlsWpControls
 {
-
-    public static void LogMode(AutoEngineerMode modeValue)
-    {
-        Log.Information("Mode: " + modeValue);
-    }
-
     [HarmonyTranspiler]
     [HarmonyPatch(typeof(CarInspector), "PopulateAIPanel")]
     public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator, MethodBase original) {
@@ -147,16 +140,16 @@ public static class WaypointControlsWpControls
                    ?.ThrowIfInvalid("Could not find 'Direction'")!
                    .Advance(-1);
 
-        var labelSkip = generator.DefineLabel();
+        var labelSkip1 = generator.DefineLabel();
 
         codeMatcher.InsertAndAdvance(
                        new CodeInstruction(OpCodes.Ldfld, modeField),
                        new CodeInstruction(OpCodes.Ldc_I4_3),
-                       new CodeInstruction(OpCodes.Beq_S, labelSkip),
+                       new CodeInstruction(OpCodes.Beq_S, labelSkip1),
                        new CodeInstruction(OpCodes.Ldloc_0)
                    )
                    .Advance(11)
-                   .InsertAndAdvance(new CodeInstruction(OpCodes.Nop) { labels = new List<Label> { labelSkip } });
+                   .InsertAndAdvance(new CodeInstruction(OpCodes.Nop) { labels = new List<Label> { labelSkip1 } });
 
         // add controls to 'Waypoint' mode
         codeMatcher.End()
@@ -175,16 +168,23 @@ public static class WaypointControlsWpControls
         var label2 = label2Instruction.labels[0];
         label2Instruction.labels.Clear();
 
+        var labelSkip2 = generator.DefineLabel();
+
         codeMatcher
             .InsertAndAdvance(
                 new CodeInstruction(OpCodes.Nop) { labels = [label2] },
+                new CodeInstruction(OpCodes.Ldloc_0),
+                new CodeInstruction(OpCodes.Ldfld, modeField),
+                new CodeInstruction(OpCodes.Ldc_I4_3),
+                new CodeInstruction(OpCodes.Bne_Un_S, labelSkip2),
                 new CodeInstruction(OpCodes.Ldloc_0),
                 new CodeInstruction(OpCodes.Ldfld, builderField),
                 new CodeInstruction(OpCodes.Ldarg_0),
                 new CodeInstruction(OpCodes.Ldfld, car),
                 new CodeInstruction(OpCodes.Ldloc_0),
                 new CodeInstruction(OpCodes.Ldfld, helperField),
-                new CodeInstruction(OpCodes.Call, buildWaypointControls)
+                new CodeInstruction(OpCodes.Call, buildWaypointControls),
+                new CodeInstruction(OpCodes.Nop) { labels = new List<Label> { labelSkip2 } }
             );
 
         return codeMatcher.Instructions();

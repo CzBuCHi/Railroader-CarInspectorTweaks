@@ -25,7 +25,7 @@ public static class ManualControls
     [HarmonyPatch(typeof(CarInspector), "Awake")]
     public static void Awake(ref Window ____window) {
         var size = ____window.GetContentSize();
-        ____window.SetContentSize(new Vector2(size.x - 2, size.y + 40));
+        ____window.SetContentSize(new Vector2(size.x - 2, size.y + 90));
     }
 
     [HarmonyPostfix]
