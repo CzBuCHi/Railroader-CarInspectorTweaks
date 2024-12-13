@@ -4,10 +4,12 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
+using CarInspectorTweaks.Utility;
 using Game.Messages;
 using HarmonyLib;
 using JetBrains.Annotations;
 using Model;
+using Serilog;
 using UI;
 using UI.Builder;
 using UI.CarInspector;
@@ -116,6 +118,12 @@ public static class WaypointControlsInf
 [HarmonyPatchCategory("WaypointControls")]
 public static class WaypointControlsWpControls
 {
+
+    public static void LogMode(AutoEngineerMode modeValue)
+    {
+        Log.Information("Mode: " + modeValue);
+    }
+
     [HarmonyTranspiler]
     [HarmonyPatch(typeof(CarInspector), "PopulateAIPanel")]
     public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator, MethodBase original) {
@@ -141,8 +149,8 @@ public static class WaypointControlsWpControls
 
         codeMatcher.InsertAndAdvance(
                        new CodeInstruction(OpCodes.Ldfld, modeField),
-                       new CodeInstruction(OpCodes.Ldc_I4_4),
-                       new CodeInstruction(OpCodes.Bne_Un_S, labelSkip),
+                       new CodeInstruction(OpCodes.Ldc_I4_3),
+                       new CodeInstruction(OpCodes.Beq_S, labelSkip),
                        new CodeInstruction(OpCodes.Ldloc_0)
                    )
                    .Advance(11)
@@ -176,6 +184,8 @@ public static class WaypointControlsWpControls
                 new CodeInstruction(OpCodes.Ldfld, helperField),
                 new CodeInstruction(OpCodes.Call, buildWaypointControls)
             );
+        TranspilerUtils.LogAllInstructions(original, codeMatcher.Instructions());
+
         return codeMatcher.Instructions();
     }
 
