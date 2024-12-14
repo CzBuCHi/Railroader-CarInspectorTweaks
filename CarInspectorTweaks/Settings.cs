@@ -20,4 +20,5 @@ public class Settings
     public float OilThreshold             { get; set; }
     public bool  ShowCarOil               { get; set; }
     public bool  WaypointControls         { get; set; }
+    public int   YardMaxSpeed          { get; set; } = 15;
 }

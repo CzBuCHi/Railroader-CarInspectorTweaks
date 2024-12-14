@@ -1,5 +1,6 @@
 using HarmonyLib;
 using JetBrains.Annotations;
+using KeyValue.Runtime;
 using Railloader;
 using Serilog;
 using UI.Builder;
@@ -75,9 +76,11 @@ public sealed class CarInspectorTweaksPlugin : SingletonPluginBase<CarInspectorT
                .Tooltip("Manage Consist", "Adds 'connect air', 'release handbrakes' and 'oil all cars' buttons to manual orders and yard tab.");
 
         if (Settings.ConsistManage) {
-            builder.AddField("Oil Threshold", builder.AddSliderQuantized(() => Settings.OilThreshold,
+            builder.AddField("Oil Threshold", builder.AddSliderQuantized(
+                       () => Settings.OilThreshold,
                        () => (Settings.OilThreshold * 100).ToString("0") + "%",
-                       o => Settings.OilThreshold = o, 0.01f, 0, 1,
+                       o => Settings.OilThreshold = o, 
+                       0.01f, 0, 1,
                        o => Settings.OilThreshold = o)!)!
                    .Tooltip("Oil Threshold", "Show 'oil all cars' button if any car has less oil than specified.");
         }
@@ -85,7 +88,16 @@ public sealed class CarInspectorTweaksPlugin : SingletonPluginBase<CarInspectorT
         builder.AddField("Waypoint controls", builder.AddToggle(() => Settings.WaypointControls, o => Settings.WaypointControls = o)!)!
                .Tooltip("Waypoint controls", "Adds ability to set waypoints.");
 
+        builder.AddField("Yard max Speed", builder.AddSliderQuantized(
+                   () => Settings.YardMaxSpeed,
+                   () => Settings.YardMaxSpeed.ToString(),
+                   o => Settings.YardMaxSpeed = (int)o,
+                   5f, 0f, 45f,
+                   o => Settings.YardMaxSpeed = (int)o)!)!
+               .Tooltip("Yard max Speed", "Maximum allowed speed in yard mode");
+
         builder.AddButton("Save", ModTabDidClose);
+        return;
     }
 
     public void ModTabDidClose() {
@@ -148,6 +160,10 @@ public sealed class CarInspectorTweaksPlugin : SingletonPluginBase<CarInspectorT
 
         if (Settings.WaypointControls) {
             harmony.PatchCategory("WaypointControls");
+        }
+
+        if (Settings.YardMaxSpeed != 15) {
+            harmony.PatchCategory("YardMaxSpeed");
         }
     }
 }
