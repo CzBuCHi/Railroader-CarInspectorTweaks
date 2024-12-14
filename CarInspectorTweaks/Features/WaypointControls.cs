@@ -194,8 +194,12 @@ public static class WaypointControlsWpControls
         var persistence = new AutoEngineerPersistence(car.KeyValueObject);
 
         var maxValue = helper.Mode.MaxSpeedMph();
-        var control  = builder.AddSliderQuantized(() => persistence.Orders.MaxSpeedMph, persistence.Orders.MaxSpeedMph.ToString, value => helper.SetOrdersValue(maxSpeedMph: (int)value), 5f, maxValue: maxValue)!;
-        builder.AddField("Max Speed", control);
+        builder.AddField("Max Speed", builder.AddSliderQuantized(
+            () => persistence.Orders.MaxSpeedMph,
+            () => persistence.Orders.MaxSpeedMph.ToString(),
+            value => helper.SetOrdersValue(maxSpeedMph: (int)value), 
+            5f, 0, maxValue,
+            value => helper.SetOrdersValue(maxSpeedMph: (int)value))!);
 
         builder.AddField("Waypoints",
             builder.ButtonStrip(strip => {
