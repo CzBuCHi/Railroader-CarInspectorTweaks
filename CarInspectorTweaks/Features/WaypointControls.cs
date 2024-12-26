@@ -23,21 +23,21 @@ internal static class WaypointControlsUtils
     public static readonly Action<object, AutoEngineerMode?, bool?, int?, float?> SetOrdersValue;
 
     static WaypointControlsUtils() {
-        var type = typeof(CarInspector).Assembly.GetType("UI.CarInspector.CarInspector+<>c__DisplayClass49_0");
+        var type = typeof(CarInspector).Assembly.GetType("UI.CarInspector.CarInspector+<>c__DisplayClass50_0");
         if (type == null) {
-            throw new Exception("Type UI.CarInspector.CarInspector+<>c__DisplayClass49_0 not found.");
+            throw new Exception("Type UI.CarInspector.CarInspector+<>c__DisplayClass50_0 not found.");
         }
 
         var targetMethod = type.GetMembers(BindingFlags.Instance | BindingFlags.NonPublic)
                                .OfType<MethodInfo>()
                                .FirstOrDefault(o => o.Name == "<PopulateAIPanel>b__15");
         if (targetMethod == null) {
-            throw new Exception("Method UI.CarInspector.CarInspector+<>c__DisplayClass49_0::b__15 not found.");
+            throw new Exception("Method UI.CarInspector.CarInspector+<>c__DisplayClass50_0::b__15 not found.");
         }
 
         var setOrdersValue = type.GetMembers(BindingFlags.Instance | BindingFlags.NonPublic).OfType<MethodInfo>().FirstOrDefault(o => o.Name == "<PopulateAIPanel>g__SetOrdersValue|0");
         if (setOrdersValue == null) {
-            throw new Exception("Method UI.CarInspector.CarInspector+<>c__DisplayClass49_0::<PopulateAIPanel>g__SetOrdersValue|0 not found.");
+            throw new Exception("Method UI.CarInspector.CarInspector+<>c__DisplayClass50_0::<PopulateAIPanel>g__SetOrdersValue|0 not found.");
         }
 
         var instanceParam = Expression.Parameter(typeof(object), "instance");
@@ -70,16 +70,16 @@ public static class WaypointControlsWp
     }
 
     public static MethodBase TargetMethod() {
-        var type = typeof(CarInspector).Assembly.GetType("UI.CarInspector.CarInspector+<>c__DisplayClass49_0");
+        var type = typeof(CarInspector).Assembly.GetType("UI.CarInspector.CarInspector+<>c__DisplayClass50_0");
         if (type == null) {
-            throw new Exception("Type UI.CarInspector.CarInspector+<>c__DisplayClass49_0 not found.");
+            throw new Exception("Type UI.CarInspector.CarInspector+<>c__DisplayClass50_0 not found.");
         }
 
         var targetMethod = type.GetMembers(BindingFlags.Instance | BindingFlags.NonPublic)
                                .OfType<MethodInfo>()
                                .FirstOrDefault(o => o.Name == "<PopulateAIPanel>b__2");
         if (targetMethod == null) {
-            throw new Exception("Method UI.CarInspector.CarInspector+<>c__DisplayClass49_0::b__2 not found.");
+            throw new Exception("Method UI.CarInspector.CarInspector+<>c__DisplayClass50_0::b__2 not found.");
         }
 
         return targetMethod;
@@ -97,9 +97,9 @@ public static class WaypointControlsInf
     }
 
     public static MethodBase TargetMethod() {
-        var type = typeof(CarInspector).Assembly.GetType("UI.CarInspector.CarInspector+<>c__DisplayClass49_0");
+        var type = typeof(CarInspector).Assembly.GetType("UI.CarInspector.CarInspector+<>c__DisplayClass50_0");
         if (type == null) {
-            throw new Exception("Type UI.CarInspector.CarInspector+<>c__DisplayClass49_0 not found.");
+            throw new Exception("Type UI.CarInspector.CarInspector+<>c__DisplayClass50_0 not found.");
         }
 
         var targetMethod = type.GetMembers(BindingFlags.Instance | BindingFlags.NonPublic)
@@ -107,7 +107,7 @@ public static class WaypointControlsInf
                                .FirstOrDefault(o => o.Name == "<PopulateAIPanel>b__15");
 
         if (targetMethod == null) {
-            throw new Exception("Method UI.CarInspector.CarInspector+<>c__DisplayClass49_0::b__15 not found.");
+            throw new Exception("Method UI.CarInspector.CarInspector+<>c__DisplayClass50_0::b__15 not found.");
         }
 
         return targetMethod;
@@ -123,7 +123,7 @@ public static class WaypointControlsWpControls
     [HarmonyPatch(typeof(CarInspector), "PopulateAIPanel")]
     public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator, MethodBase original) {
         var car          = AccessTools.Field(typeof(CarInspector), "_car");
-        var type         = typeof(CarInspector).Assembly.GetType("UI.CarInspector.CarInspector+<>c__DisplayClass49_0")!;
+        var type         = typeof(CarInspector).Assembly.GetType("UI.CarInspector.CarInspector+<>c__DisplayClass50_0")!;
         var helperField  = AccessTools.Field(type, "helper");
         var builderField = AccessTools.Field(type, "builder");
         var modeField    = AccessTools.Field(type, "mode");
