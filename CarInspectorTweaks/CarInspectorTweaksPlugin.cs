@@ -96,8 +96,17 @@ public sealed class CarInspectorTweaksPlugin : SingletonPluginBase<CarInspectorT
                    o => Settings.YardMaxSpeed = (int)o)!)!
                .Tooltip("Yard max Speed", "Maximum allowed speed in yard mode");
 
+        builder.AddField("Set car Inspector Height", builder.AddToggle(() => Settings.SetCarInspectorHeight, o => Settings.SetCarInspectorHeight = o)!)!
+               .Tooltip("Set car Inspector Height", "Set car inspector height");
+
+        builder.AddField("Car Inspector Height", builder.AddSliderQuantized(
+                   () => Settings.CarInspectorHeight,
+                   () => Settings.CarInspectorHeight.ToString(),
+                   o => Settings.CarInspectorHeight = (int)o,
+                   5f, 0f, 1000f,
+                   o => Settings.CarInspectorHeight = (int)o)!);
+
         builder.AddButton("Save", ModTabDidClose);
-        return;
     }
 
     public void ModTabDidClose() {
@@ -162,8 +171,8 @@ public sealed class CarInspectorTweaksPlugin : SingletonPluginBase<CarInspectorT
             harmony.PatchCategory("WaypointControls");
         }
 
-        if (Settings.YardMaxSpeed != 15) {
-            harmony.PatchCategory("YardMaxSpeed");
+        if (Settings.SetCarInspectorHeight) {
+            harmony.PatchCategory("CarInspectorHeight");
         }
     }
 }

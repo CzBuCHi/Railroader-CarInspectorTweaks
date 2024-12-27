@@ -1,13 +1,9 @@
-using System;
-using System.Linq;
-using System.Reflection;
 using Game.Messages;
 using HarmonyLib;
 using JetBrains.Annotations;
 using Model;
 using Model.AI;
 using Model.Definition;
-using UI;
 using UI.Builder;
 using UI.CarInspector;
 using UI.Common;
@@ -21,13 +17,6 @@ namespace CarInspectorTweaks.Features;
 [HarmonyPatchCategory("ManualControls")]
 public static class ManualControls
 {
-    [HarmonyPostfix]
-    [HarmonyPatch(typeof(CarInspector), "Awake")]
-    public static void Awake(ref Window ____window) {
-        var size = ____window.GetContentSize();
-        ____window.SetContentSize(new Vector2(size.x - 2, size.y + 90));
-    }
-
     [HarmonyPostfix]
     [HarmonyPatch(typeof(CarInspector), nameof(PopulateAIPanel))]
     public static void PopulateAIPanel(UIPanelBuilder builder, CarInspector __instance, Car ____car, Window ____window) {
