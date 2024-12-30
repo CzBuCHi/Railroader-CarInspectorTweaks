@@ -26,6 +26,17 @@ Simple mod, that modifies Car inspector dialog:
     - Adds 'connect air', 'release handbrakes' and 'oil all cars' buttons to manual orders and yard tab.
     - buttons are visible only if needed
     - oil all cars buttons show oil status of worst car in consist
+1. Oil Threshold
+    - Adds button that show car with least of oil in bearing
+    - Includes treshold slider to ignore cars with oil above
+1. Waypoint controls
+    - Adds buttons to set/clear waypoints
+1. Yard max Speed
+    - adds slider to configure yard max speed
+1. Set car Inspector Height
+    - override car inspector height to given value
+1. Copy crew
+    - adds button under cred dropdown to copy crew to all cars in consist
 
 ## Installation
 

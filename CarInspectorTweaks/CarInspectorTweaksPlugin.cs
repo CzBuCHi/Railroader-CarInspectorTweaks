@@ -106,6 +106,9 @@ public sealed class CarInspectorTweaksPlugin : SingletonPluginBase<CarInspectorT
                    5f, 0f, 1000f,
                    o => Settings.CarInspectorHeight = (int)o)!);
 
+        builder.AddField("Copy crew", builder.AddToggle(() => Settings.CopyCrew, o => Settings.CopyCrew = o)!)!
+               .Tooltip("Copy crew", "Copy car's crew to the other cars in consist.");
+
         builder.AddButton("Save", ModTabDidClose);
     }
 
@@ -173,6 +176,10 @@ public sealed class CarInspectorTweaksPlugin : SingletonPluginBase<CarInspectorT
 
         if (Settings.SetCarInspectorHeight) {
             harmony.PatchCategory("CarInspectorHeight");
+        }
+
+        if (Settings.CopyCrew) {
+            harmony.PatchCategory("CopyCrew");
         }
     }
 }

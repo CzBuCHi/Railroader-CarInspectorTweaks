@@ -23,4 +23,5 @@ public class Settings
     public int   YardMaxSpeed             { get; set; } = 15;
     public bool  SetCarInspectorHeight    { get; set; }
     public int   CarInspectorHeight       { get; set; } = 500;
+    public bool  CopyCrew                 { get; set; }
 }
