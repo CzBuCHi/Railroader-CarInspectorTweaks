@@ -10,7 +10,7 @@ namespace CarInspectorTweaks;
 [UsedImplicitly]
 public sealed class CarInspectorTweaksPlugin : SingletonPluginBase<CarInspectorTweaksPlugin>, IModTabHandler
 {
-    private const string ModIdentifier = "CarInspectorTweaks";
+    private const string ModIdentifier = "CzBuCHi.CarInspectorTweaks";
 
     public static IModdingContext Context  { get; private set; } = null!;
     public static IUIHelper       UiHelper { get; private set; } = null!;
