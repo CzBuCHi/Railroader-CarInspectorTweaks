@@ -37,7 +37,8 @@ Simple mod, that modifies Car inspector dialog:
     - override car inspector height to given value
 1. Copy crew
     - adds button under cred dropdown to copy crew to all cars in consist
-
+    - adds button to set all pasenger stops from timetable
+    
 ## Installation
 
 * Download `CarInspectorResizer-VERSION.zip` from the releases page
