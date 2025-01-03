@@ -5,6 +5,7 @@ using Game.State;
 using HarmonyLib;
 using JetBrains.Annotations;
 using Model;
+using Model.Definition;
 using Model.Ops;
 using Model.Ops.Timetable;
 using UI.Builder;
@@ -25,17 +26,22 @@ public static class CopyCrew
         }
 
         builder.ButtonStrip(strip => {
-            strip.AddButton("<sprite name=Copy><sprite name=Coupled>", () => {
-                car.EnumerateCoupled(Car.End.F)!
-                   .Where(o => o != car)
-                   .Do(o => { StateManager.ApplyLocal(new SetCarTrainCrew(o.id, car.trainCrewId)); });
-            })!.Tooltip("Copy crew", "Copy this car's crew to the other cars in consist.");
+            strip.AddButton("<sprite name=Copy><sprite name=Coupled>", SetCarTrainCrew)!.Tooltip("Copy crew", "Copy this car's crew to the other cars in consist.");
 
             if (car.TryGetTimetableTrain(out var timetableTrain)) {
                 strip.AddButton("Copy from Timetable", () => CopyStopsFromTimetable(car, timetableTrain))
                      .Tooltip("Set from Timetable", "Copy the passenger stops from the timetable for " + timetableTrain.Name + ".");
             }
         });
+        return;
+
+        void SetCarTrainCrew() {
+            car.EnumerateCoupled(Car.End.F)!
+               .Where(o => o != car && o.Archetype is CarArchetype.Coach or CarArchetype.LocomotiveDiesel or CarArchetype.LocomotiveSteam or CarArchetype.Caboose)
+               .Do(o => StateManager.ApplyLocal(new SetCarTrainCrew(o.id, car.trainCrewId)));
+
+            builder.Rebuild(); 
+        }
     }
 
     private static void CopyStopsFromTimetable(Car car, Timetable.Train timetableTrain) {
